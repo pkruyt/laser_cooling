@@ -20,7 +20,7 @@ buf = context.new_buffer()
 
 
 #num_turns = int(1e2)
-n_part = int(1e0)
+n_part = int(1e1)
 
 
 # Ion properties:
@@ -120,24 +120,11 @@ particles0 = xp.generate_matched_gaussian_bunch(
 
 particles_old=particles0.copy()
 particles00=particles_old.copy()
-particles000=particles_old.copy()
 
 sequence.particle_ref = particle_sample
 twiss = SPS_tracker.twiss(symplectify=True)
 
-
-
-del twiss['particle_on_co']
-
-import pickle
-
-with open('cache/twiss.pkl', 'wb') as f:
-    pickle.dump(twiss, f)
-
-num_turns = 1
-
-
-#%%
+num_turns = 100
 
 SPS_tracker.track(particles0, num_turns=num_turns, turn_by_turn_monitor=True)
 
@@ -172,56 +159,66 @@ lin_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
 
 lin_tracker.track(particles00, num_turns=num_turns, turn_by_turn_monitor=True)
 
-#%%
-
-
-# with open('SPS_lin.json', 'w') as fid:
-#     json.dump(SPS_lin.to_dict(), fid, cls=xo.JEncoder)
-
-# with open('particles_old.json', 'w') as fid:
-#     json.dump(particles_old.to_dict(), fid, cls=xo.JEncoder)
-
-
-
-with open('cache/SPS_lin.json', 'w') as fid:
-    json.dump(SPS_lin.to_dict(), fid, cls=xo.JEncoder)
-
-with open('cache/particles_old.json', 'w') as fid:
-    json.dump(particles_old.to_dict(), fid, cls=xo.JEncoder)
+x_lin=lin_tracker.record_last_track.x
+px_lin=lin_tracker.record_last_track.px
+y_lin=lin_tracker.record_last_track.y
+py_lin=lin_tracker.record_last_track.py
+z_lin=lin_tracker.record_last_track.zeta
+delta_lin=lin_tracker.record_last_track.delta
 
 
 
 #%%
 
+################
+# Phase Space #
+################
+from acc_lib import plot_tools
+import matplotlib.pyplot as plt
 
-# with open('SPS_lin.json', 'r') as fid:
-#     loaded_dct = json.load(fid)
-# SPS_lin2 = xt.Line.from_dict(loaded_dct)
+plt.locator_params(axis='x', nbins=5)
 
-
-# # Load particles from json file to selected context
-# with open('particles_old.json', 'r') as fid:
-#     particles_old2= xp.Particles.from_dict(json.load(fid), _context=context)
-
-
-# lin_tracker2 = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin2)
-
-# lin_tracker2.track(particles000, num_turns=num_turns, turn_by_turn_monitor=True)
+fig=plt.figure()
+fig2=plt.figure()
+fig3=plt.figure()
+fig4=plt.figure()
 
 
-# #%%
+plot_tools.plot_phase_space_ellipse(fig, SPS_tracker, axis='horizontal')
+plot_tools.plot_phase_space_ellipse(fig2, SPS_tracker, axis='vertical')
+
+plot_tools.plot_phase_space_ellipse(fig3, lin_tracker, axis='horizontal')
+plot_tools.plot_phase_space_ellipse(fig4, lin_tracker, axis='vertical')
 
 
-# x_lin=lin_tracker.record_last_track.x
-# px_lin=lin_tracker.record_last_track.px
-# y_lin=lin_tracker.record_last_track.y
-# py_lin=lin_tracker.record_last_track.py
-# z_lin=lin_tracker.record_last_track.zeta
-# delta_lin=lin_tracker.record_last_track.delta
+#turn1_x=x_lin[:,0]
 
-# x_lin2=lin_tracker2.record_last_track.x
-# px_lin2=lin_tracker2.record_last_track.px
-# y_lin2=lin_tracker2.record_last_track.y
-# py_lin2=lin_tracker2.record_last_track.py
-# z_lin2=lin_tracker2.record_last_track.zeta
-# delta_lin2=lin_tracker2.record_last_track.delta
+#horizontal
+
+#%%
+
+x_diff=np.subtract(x0,x_lin)
+px_diff=px0-px_lin
+y_diff=y0-y_lin
+py_diff=y0-py_lin
+z_diff=z0-z_lin
+delta_diff=delta0-delta_lin
+
+plt.figure()
+plt.plot(x0)
+plt.plot(x_lin)
+
+plt.figure()
+plt.plot(px0)
+plt.plot(py_lin)
+
+plt.figure()
+plt.plot(y0)
+plt.plot(y_lin)
+
+plt.figure()
+plt.plot(py0)
+plt.plot(py_lin)
+
+xtest = x0[1,1]-x_lin[1,1]
+xtest2=x_diff[1,1]
