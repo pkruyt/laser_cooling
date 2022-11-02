@@ -166,7 +166,7 @@ SPS_lin.append_element(arc,'SPS_LinearTransferMatrix')
 
 
 
-num_turns=int(2*1e8)
+num_turns=int(1*1e6)
 n_part=len(particles_old.x)
 
 
@@ -180,14 +180,16 @@ delta_old = particles_old.delta
 x=[]
 px=[]
 
-a1=0.0020
-a2=0.0025
+a1=0.0012
+a2=0.0015
 
 de=-hw0*0.5*2.0*gamma
 
 cutoff=500
     
-
+max_x_list=[]
+min_x_list=[]
+lower_bound_list=[]
 
 
 delta_list = []
@@ -195,14 +197,30 @@ delta_list = []
 for i in tqdm(range(num_turns)):
     x.append(particles0.x[0])
     px.append(particles0.px[0])
+    if i % cutoff==0:
+        print(i)
+        avg_x=x[i-cutoff:i]
+        
+    max_x = max(avg_x,default=a2)
+    min_x = min(avg_x,default=a1)
     
+    max_x_list.append(max_x)
+    min_x_list.append(min_x)
+    
+    length=(max_x-min_x)
+    
+    lower_bound=0.5*(min_x+max_x)
+    lower_bound_list.append(lower_bound)
+    
+    a1=lower_bound
+    a2=max_x
     if min(a1,a2) < particles0.x[0] < max(a1,a2):
         #print(particles0.delta[0])
         delta_list.append(particles0.delta[0])
         if particles0.delta[0]>0:
             #print('true')
             #particles0.delta+= -0.1*delta_old
-            particles0.add_to_energy(-de)
+            particles0.add_to_energy(-de*100)
     
     lin_tracker.track(particles0)
     
@@ -231,6 +249,9 @@ for i in tqdm(range(num_turns)):
 
 np.save('cache/x.npy', x)
 np.save('cache/px.npy', px)
+np.save('cache/max_x_list.npy', max_x_list)
+np.save('cache/min_x_list.npy', min_x_list)
+np.save('cache/lower_bound_list.npy', lower_bound_list)
 
 
 #%%

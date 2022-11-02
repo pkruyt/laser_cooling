@@ -14,11 +14,15 @@ from matplotlib.widgets import Slider
    
 x=np.load('cache/x.npy')
 px=np.load('cache/px.npy')
+max_x_list=np.load('cache/max_x_list.npy')
+min_x_list=np.load('cache/min_x_list.npy')
+lower_bound_list=np.load('cache/lower_bound_list.npy')
+
 num_turns = len(x)
 
 
-a1=0.0020
-a2=0.0025
+a1=0.0012
+a2=0.0015
 
 #%%
 ##################
@@ -62,6 +66,8 @@ def update(val):
     value=freq_slider.val
     ax.clear()
     
+    a1=lower_bound_list[int(value)]
+    a2=max_x_list[int(value)]
     
     ax.axvline(x=a1,color='red',label='cooling zone')
     ax.axvline(x=a2,color='red')
