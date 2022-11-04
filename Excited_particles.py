@@ -99,10 +99,14 @@ print('Laser wavelength = %.2f nm' % (lambda_l/1e-9))
 laser_waist_radius = 1.3e-3
 #laser_waist_radius = 1.3e-7
 
+laser_x=0.00100
+
 GF_IP = xt.IonLaserIP(_buffer=buf,
+                      laser_x=laser_x,
+                      
                       laser_direction_nx = 0,
-                      laser_direction_ny = ny,
-                      laser_direction_nz = nz,
+                      laser_direction_ny = 0,
+                      laser_direction_nz = -1,
                       laser_energy         = 5e-3, # J
                       laser_duration_sigma = sigma_t, # sec
                       laser_wavelength = lambda_l, # m
@@ -214,8 +218,8 @@ plt.figure()
 plt.scatter(x,px,label="all particles")
 plt.scatter(x[excited],px[excited],label='excited')
 
-plt.axvline(x=0.0015 , color='red')
-plt.axvline(x=0.0020 , color='red')
+# plt.axvline(x=0.0015 , color='red')
+plt.axvline(laser_x, color='red',label='laser location')
 
 plt.xlabel('x(m)')
 plt.ylabel('px')

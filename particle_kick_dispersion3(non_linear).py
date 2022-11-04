@@ -146,8 +146,11 @@ particles_old=particles0.copy()
 particles0.delta = abs(particles_old.delta)
 #particles0.delta = 1e-1
 
+disp=twiss['dx']
 
-disp_x_0=0.4
+disp_sum=sum(disp)
+
+disp_x_0=4
 
 
 arc=xt.LinearTransferMatrix(Q_x=twiss['qx'], Q_y=twiss['qy'],
@@ -160,12 +163,8 @@ chroma_x=twiss['dqx'], chroma_y=twiss['dqy'])
 
 SPS_lin = xt.Line()
 
-#from sps line
-frequency=200266000.0
-lag=180
-voltage=3000000.0
 
-cavity=xt.Cavity(voltage=frequency,frequency=voltage,lag=lag)
+cavity=xt.Cavity(voltage=1e4,frequency=1e6,lag=90)
 
 #SPS_lin.append_element(cavity, name='cavity')
 
@@ -181,7 +180,7 @@ num_turns=int(3*1e5)
 n_part=len(particles_old.x)
 
 
-lin_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
+lin_tracker = xt.Tracker(_context=context, _buffer=buf, line=sequence)
 
 delta_old = particles_old.delta
 
@@ -228,11 +227,11 @@ for i in tqdm(range(num_turns)):
     length=(max_x-min_x)
     
     lower_bound=0.85*(min_x+max_x)
-    lower_bound=max_x-0.05*length
+        
     lower_bound_list.append(lower_bound)
     
-    #a1=lower_bound
-    #a2=max_x
+    a1=lower_bound
+    a2=max_x
     
     
     
@@ -242,7 +241,7 @@ for i in tqdm(range(num_turns)):
         if particles0.delta[0]>0:
             print('true')
             
-            particles0.add_to_energy(-de*100)
+            particles0.add_to_energy(-de*1000)
             
             energy_list.append(particles0.energy)
     
@@ -271,6 +270,7 @@ for i in tqdm(range(num_turns)):
 
 #x2=lin_tracker.record_last_track.x  
     
+
 # plt.figure()
 # plt.scatter(x[:cutoff:],px[:cutoff],label='first 100 turns')
 # plt.scatter(x[-cutoff:],px[-cutoff:],label='last 100 turns')    

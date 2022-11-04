@@ -18,11 +18,22 @@ max_x_list=np.load('cache/max_x_list.npy')
 min_x_list=np.load('cache/min_x_list.npy')
 lower_bound_list=np.load('cache/lower_bound_list.npy')
 
+x=np.load('cache/good_results/cooling_moving_laser_non_linear(1000x)/x.npy')
+px=np.load('cache/good_results/cooling_moving_laser_non_linear(1000x)/px.npy')
+max_x_list=np.load('cache/good_results/cooling_moving_laser_non_linear(1000x)/max_x_list.npy')
+min_x_list=np.load('cache/good_results/cooling_moving_laser_non_linear(1000x)/min_x_list.npy')
+lower_bound_list=np.load('cache/good_results/cooling_moving_laser_non_linear(1000x)/lower_bound_list.npy')
+
+
+
 num_turns = len(x)
 
 
-a1=0.0012
-a2=0.0015
+a1=-0.0010
+a2=-0.0008
+
+a1=0.0014
+a2=0.0016
 
 #%%
 ##################
@@ -83,6 +94,7 @@ def update(val):
 freq_slider.on_changed(update)
 
 
+
 #%%
 ##################
 #    Make gif    #
@@ -102,13 +114,22 @@ freq_slider.on_changed(update)
 
 # interval=num_turns/num_figs
 
+
+# fig_number=0
+
 # for i in tqdm(range(num_turns)):
     
+            
 #     if i % interval == 0:
+#         fig_number+=1
 #         #plt.figure();
-#         plt.title('Energy reduction with dispersion')
+#         plt.title(f'Energy reduction with dispersion. Turn {i}')
 #         plt.xlabel('x(m)')
 #         plt.ylabel('px')
+        
+#         #plt.xlim([min(min_x_list),max(max_x_list)])
+#         a1=lower_bound_list[int(i)]
+#         a2=max_x_list[int(i)] 
         
 #         plt.axvline(x=a1,color='red',label='cooling zone')
 #         plt.axvline(x=a2)
@@ -116,5 +137,5 @@ freq_slider.on_changed(update)
 #         plt.scatter(x[i:i+sample:],px[i:i+sample],color='blue',label='turn evolution')
         
 #         plt.legend()
-#         plt.savefig('images/turn'+str(i)+'.png',dpi=80)
+#         plt.savefig('images/turn'+str(fig_number)+'.png',dpi=80)
 #         plt.clf()
