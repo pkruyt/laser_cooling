@@ -6,6 +6,8 @@ import xobjects as xo
 import xtrack as xt
 import xpart as xp
 
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 ####################
 # Choose a context #
@@ -96,21 +98,31 @@ print('Laser pulse duration sigma_t = %.2f ps' % (sigma_t/1e-12))
 
 print('Laser wavelength = %.2f nm' % (lambda_l/1e-9))
 
+laser_waist_radius = 1.3e-3
+#laser_waist_radius = 1.3e-7
+
+laser_x=0.0015000
+laser_x=0.0040000
+w=0.001300
+#laser_x=0.00100
+range1=laser_x+w
+range2=laser_x-w
+
 GF_IP = xt.IonLaserIP(_buffer=buf,
+                      laser_x=laser_x,
+                      
                       laser_direction_nx = 0,
-                      laser_direction_ny = ny,
-                      laser_direction_nz = nz,
+                      laser_direction_ny = 0,
+                      laser_direction_nz = -1,
                       laser_energy         = 5e-3, # J
                       laser_duration_sigma = sigma_t, # sec
                       laser_wavelength = lambda_l, # m
-                      laser_waist_radius = 1.3e-3, # m
+                      laser_waist_radius = laser_waist_radius, # m
                       ion_excitation_energy = hw0, # eV
                       ion_excited_lifetime  = 76.6e-12, # sec
    
                         
    )
-
-#%%
 
 
 
@@ -123,6 +135,10 @@ GF_IP = xt.IonLaserIP(_buffer=buf,
 with open('cache/SPS_lin.json', 'r') as fid:
     loaded_dct = json.load(fid)
 SPS_lin = xt.Line.from_dict(loaded_dct)
+
+
+
+
 
 
 
@@ -144,55 +160,46 @@ twiss = pickle.load(a_file)
 
 
 
-disp_x_0=0.5
+disp_x_0=0
 
 
 arc=xt.LinearTransferMatrix(Q_x=twiss['qx'], Q_y=twiss['qy'],
 beta_x_0=twiss['betx'][0], beta_x_1=twiss['betx'][-1], beta_y_0=twiss['bety'][0], beta_y_1=twiss['bety'][-1],
 alpha_x_0=twiss['alfx'][0], alpha_x_1=twiss['alfx'][-1], alpha_y_0=twiss['alfy'][0], alpha_y_1=twiss['alfy'][-1],
 disp_x_0=disp_x_0, disp_x_1=disp_x_0, disp_y_0=0, disp_y_1=0,
-Q_s=0, beta_s=twiss['betz0'],
+Q_s=twiss['qs'], beta_s=twiss['betz0'],
 chroma_x=twiss['dqx'], chroma_y=twiss['dqy'])
 
 
 SPS_lin = xt.Line()
 
+
+for i in range(1):
+        SPS_lin.append_element(GF_IP, f'GammaFactory_IP{i}')
+
 SPS_lin.append_element(arc,'SPS_LinearTransferMatrix')
-# for i in range(1):
-#         SPS_lin.append_element(GF_IP, f'GammaFactory_IP{i}')
 
 
 
-num_turns=int(1*1e4)
+num_turns=int(1e0)
 
 lin_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
-lin_tracker2 = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
 
-import datetime
-first_time = datetime.datetime.now()
+
 
 lin_tracker.track(particles0, num_turns=num_turns, turn_by_turn_monitor=True)
 
 
 
-#particles0.add_to_energy(delta_energy=1)
+excited = (particles0.state == 2)
+true=any(excited)
 
-particles00 = xp.Particles(_context=context,
-    mass0=particles0.mass0, q0=particles0.q0, p0c=particles0.p0c, # 7 TeV
-    x=particles0.x, px=particles0.px, y=particles0.y, py=particles0.py,
-    zeta=particles0.zeta, delta=-10*particles0.delta)
-
-lin_tracker2.track(particles00, num_turns=num_turns, turn_by_turn_monitor=True)
-
-
-
+print('true',true)
 
 #%%
 ##################
 #    Emmitance   #
 ##################
-
-import matplotlib.pyplot as plt
 
 x = lin_tracker.record_last_track.x
 px = lin_tracker.record_last_track.px
@@ -203,31 +210,132 @@ py = lin_tracker.record_last_track.py
 zeta = lin_tracker.record_last_track.zeta
 delta = lin_tracker.record_last_track.delta
 
-x2 = lin_tracker2.record_last_track.x
-px2 = lin_tracker2.record_last_track.px
+#%%
+################
+# Phase Space #
+################
 
-y2 = lin_tracker2.record_last_track.y
-py2 = lin_tracker2.record_last_track.py
+#shift=0.0020
+# import matplotlib.pyplot as plt
 
-zeta2 = lin_tracker2.record_last_track.zeta
-delta2 = lin_tracker2.record_last_track.delta
-
-
- 
-figure = plt.figure
-ax = plt.gca()
-
-num_particles = len(x)
-
-for i in range(num_particles):
-    # create an axes object in the figure
-   
-    ax.scatter(x[i,:],px[i,:], color='red', alpha=1,label="Default particle" if i == 0 else "")
-    #ax.legend()
-    ax.scatter(x2[i,:],px2[i,:], color='blue', alpha=1,label="Particle with a kick" if i == 0 else "")
-    #ax.legend()
+# plt.figure()
+# plt.scatter(x,px,label="all particles")
+# plt.scatter(x[excited],px[excited],label='excited')
 
 
-plt.legend()
-plt.title(f'Transverse phase space disp={disp_x_0}')
+# plt.axvline(laser_x, color='red',label='laser location')
+# #plt.axvline(range1 , color='red',label='laser location')
+# #plt.axvline(range2 , color='red',label='laser location')
+
+
+# plt.xlabel('x(m)')
+# plt.ylabel('px')
+# plt.legend()
+# plt.title('Fraction of particles that are excited')
+
+
+#%%
+
+np.save('cache/x_laser.npy', x)
+np.save('cache/px_laser.npy', px)
+
+
+#%%
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import numpy as np
+
+
+
+
+x1 = x*1e3
+y1 = px*1e3
+
+x = x[excited]*1e3
+y = px[excited]*1e3
+
+
+fraction=len(x)/len(x1)
+
+#fontsize=12
+
+fig = plt.figure(figsize=(12,12))
+gs = gridspec.GridSpec(3, 3)
+ax_main = plt.subplot(gs[1:3, :2])
+ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
+ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
+
+ax_main.scatter(x1,y1,marker='.',label='all particles',linewidths=5)    
+ax_main.scatter(x,y,marker='.',label='excited',linewidths=5)
+#ax_main.set(xlabel="x(mm)", ylabel="px")
+ax_main.set_xlabel('x(mm)')
+ax_main.set_ylabel('px')
+
+
+ax_xDist.hist(x,bins=100,align='mid')
+ax_xDist.set(ylabel='count')
+ax_xCumDist = ax_xDist.twinx()
+ax_xCumDist.hist(x,bins=100,cumulative=True,histtype='step',density=True,color='r',align='mid')
+ax_xCumDist.tick_params('y', colors='r')
+ax_xCumDist.set_ylabel('cumulative',color='r')
+
+ax_yDist.hist(y,bins=100,orientation='horizontal',align='mid')
+ax_yDist.set(xlabel='count')
+ax_yCumDist = ax_yDist.twiny()
+ax_yCumDist.hist(y,bins=100,cumulative=True,histtype='step',density=True,color='r',align='mid',orientation='horizontal')
+ax_yCumDist.tick_params('x', colors='r')
+ax_yCumDist.set_xlabel('cumulative',color='r')
+
+
+ax_main.axvline(laser_x*1e3, color='red',label='laser location')
+ax_main.legend(loc='best')
+#ax_main.figtext(0.5,0.5,'fraction of excited ions:'+str(fraction))
+
+
+
+
+
+fig.text(0.25,0.15,"%.2f%% of ions excited" % (100*len(x)/len(x1)),fontsize=15)
+fig.suptitle('Fraction of particles that are excited',x=0.5,y=0.92,fontsize=20)
 plt.show()
+
+
+#%%
+
+# fig = plt.figure(figsize=(8,8))
+# gs = gridspec.GridSpec(3, 3)
+# ax_main = plt.subplot(gs[1:3, :2])
+# ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
+# ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
+
+# ax_main.scatter(x1,y1,marker='.')    
+# ax_main.scatter(x,y,marker='.')
+# ax_main.set(xlabel="x data", ylabel="y data")
+
+# ax_xDist.hist(x,bins=100,align='mid')
+# ax_xDist.set(ylabel='count')
+# ax_xCumDist = ax_xDist.twinx()
+# ax_xCumDist.hist(x,bins=100,cumulative=True,histtype='step',density=True,color='r',align='mid')
+# ax_xCumDist.tick_params('y', colors='r')
+# ax_xCumDist.set_ylabel('cumulative',color='r')
+
+# ax_yDist.hist(y,bins=100,orientation='horizontal',align='mid')
+# ax_yDist.set(xlabel='count')
+# ax_yCumDist = ax_yDist.twiny()
+# ax_yCumDist.hist(y,bins=100,cumulative=True,histtype='step',density=True,color='r',align='mid',orientation='horizontal')
+# ax_yCumDist.tick_params('x', colors='r')
+# ax_yCumDist.set_xlabel('cumulative',color='r')
+
+# plt.show()
+
+
+
+
+
+
+
+
+
+
+
+

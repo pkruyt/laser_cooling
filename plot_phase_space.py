@@ -18,13 +18,16 @@ max_x_list=np.load('cache/max_x_list.npy')
 min_x_list=np.load('cache/min_x_list.npy')
 lower_bound_list=np.load('cache/lower_bound_list.npy')
 
-x=np.load('cache/good_results/cooling_moving_laser_non_linear(1000x)/x.npy')
-px=np.load('cache/good_results/cooling_moving_laser_non_linear(1000x)/px.npy')
-max_x_list=np.load('cache/good_results/cooling_moving_laser_non_linear(1000x)/max_x_list.npy')
-min_x_list=np.load('cache/good_results/cooling_moving_laser_non_linear(1000x)/min_x_list.npy')
-lower_bound_list=np.load('cache/good_results/cooling_moving_laser_non_linear(1000x)/lower_bound_list.npy')
+# x=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/x.npy')
+# px=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/px.npy')
+# max_x_list=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/max_x_list.npy')
+# min_x_list=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/min_x_list.npy')
+# lower_bound_list=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/lower_bound_list.npy')
 
 
+
+x=np.load('cache/x_laser.npy')[0]
+px=np.load('cache/px_laser.npy')[0]
 
 num_turns = len(x)
 
@@ -32,8 +35,9 @@ num_turns = len(x)
 a1=-0.0010
 a2=-0.0008
 
-a1=0.0014
-a2=0.0016
+a1=0.0015
+a2=0.0032
+
 
 #%%
 ##################
@@ -77,8 +81,8 @@ def update(val):
     value=freq_slider.val
     ax.clear()
     
-    a1=lower_bound_list[int(value)]
-    a2=max_x_list[int(value)]
+    #a1=lower_bound_list[int(value)]
+    #a2=max_x_list[int(value)]
     
     ax.axvline(x=a1,color='red',label='cooling zone')
     ax.axvline(x=a2,color='red')
@@ -139,3 +143,11 @@ freq_slider.on_changed(update)
 #         plt.legend()
 #         plt.savefig('images/turn'+str(fig_number)+'.png',dpi=80)
 #         plt.clf()
+
+
+#%%
+
+
+
+
+

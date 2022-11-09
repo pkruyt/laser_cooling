@@ -146,11 +146,8 @@ particles_old=particles0.copy()
 particles0.delta = abs(particles_old.delta)
 #particles0.delta = 1e-1
 
-disp=twiss['dx']
 
-disp_sum=sum(disp)
-
-disp_x_0=4
+disp_x_0=0.4
 
 
 arc=xt.LinearTransferMatrix(Q_x=twiss['qx'], Q_y=twiss['qy'],
@@ -163,10 +160,61 @@ chroma_x=twiss['dqx'], chroma_y=twiss['dqy'])
 
 SPS_lin = xt.Line()
 
+#from sps line
+frequency=200266000.0
+lag=180
+voltage=3000000.0
 
-cavity=xt.Cavity(voltage=1e4,frequency=1e6,lag=90)
+cavity=xt.Cavity(voltage=frequency,frequency=voltage,lag=lag)
 
-#SPS_lin.append_element(cavity, name='cavity')
+#%%
+
+
+
+# Pass beam through the RF-resonator:
+
+# def RFcavity(X, h, eVrf, phi0):
+#     # returns vector X after RF-cavity
+
+#     x = X[0].A1; xp = X[1].A1; y = X[2].A1; yp = X[3].A1; z = X[4].A1; dp = X[5].A1
+    
+#     p = p0 + p0*dp # eV/c
+#     # since p*p = px*px + py*py + pz*pz, and px = pz*x', py=pz*y':
+#     pz = p/np.sqrt(1+xp*xp+yp*yp)
+#     px = pz*xp
+#     py = pz*yp
+
+#     v0 = c/np.sqrt(1 + mc*mc/(p0*p0))
+#     v  = c/np.sqrt(1 + mc*mc/(p*p))
+#     vz = v*pz/p
+    
+#     # phase in the resonator:   
+#     phi = phi0 - 2*np.pi*h*(z/L)*v0/vz
+
+#     pz = pz + eVrf*(Z-Ne)*np.cos(phi)/beta_0 # pz after RF-cavity 
+    
+#     xp = px/pz
+#     yp = py/pz
+    
+#     p = np.sqrt(px*px+py*py+pz*pz)
+#     dp = (p-p0)/p0 # new relative momentum deviation
+    
+#     return np.matrix([
+#       x ,
+#       xp,
+#       y ,
+#       yp,
+#       z ,
+#       dp
+#     ])
+
+
+
+
+#%%
+
+
+SPS_lin.append_element(cavity, name='cavity')
 
 SPS_lin.append_element(arc,'SPS_LinearTransferMatrix')
 # for i in range(1):
@@ -180,7 +228,7 @@ num_turns=int(3*1e5)
 n_part=len(particles_old.x)
 
 
-lin_tracker = xt.Tracker(_context=context, _buffer=buf, line=sequence)
+lin_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
 
 delta_old = particles_old.delta
 
@@ -227,11 +275,11 @@ for i in tqdm(range(num_turns)):
     length=(max_x-min_x)
     
     lower_bound=0.85*(min_x+max_x)
-        
+    lower_bound=max_x-0.05*length
     lower_bound_list.append(lower_bound)
     
-    a1=lower_bound
-    a2=max_x
+    #a1=lower_bound
+    #a2=max_x
     
     
     
@@ -241,7 +289,7 @@ for i in tqdm(range(num_turns)):
         if particles0.delta[0]>0:
             print('true')
             
-            particles0.add_to_energy(-de*1000)
+            particles0.add_to_energy(-de*100)
             
             energy_list.append(particles0.energy)
     
@@ -270,7 +318,6 @@ for i in tqdm(range(num_turns)):
 
 #x2=lin_tracker.record_last_track.x  
     
-
 # plt.figure()
 # plt.scatter(x[:cutoff:],px[:cutoff],label='first 100 turns')
 # plt.scatter(x[-cutoff:],px[-cutoff:],label='last 100 turns')    

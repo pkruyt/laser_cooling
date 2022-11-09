@@ -6,7 +6,8 @@ import xobjects as xo
 import xtrack as xt
 import xpart as xp
 
-
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 ####################
 # Choose a context #
 ####################
@@ -96,26 +97,21 @@ print('Laser pulse duration sigma_t = %.2f ps' % (sigma_t/1e-12))
 
 print('Laser wavelength = %.2f nm' % (lambda_l/1e-9))
 
-laser_waist_radius = 1.3e-3
-#laser_waist_radius = 1.3e-7
-
-laser_x=0.00100
-
 GF_IP = xt.IonLaserIP(_buffer=buf,
-                      laser_x=laser_x,
-                      
                       laser_direction_nx = 0,
-                      laser_direction_ny = 0,
-                      laser_direction_nz = -1,
+                      laser_direction_ny = ny,
+                      laser_direction_nz = nz,
                       laser_energy         = 5e-3, # J
                       laser_duration_sigma = sigma_t, # sec
                       laser_wavelength = lambda_l, # m
-                      laser_waist_radius = laser_waist_radius, # m
+                      laser_waist_radius = 1.3e-3, # m
                       ion_excitation_energy = hw0, # eV
                       ion_excited_lifetime  = 76.6e-12, # sec
    
                         
    )
+
+#%%
 
 
 
@@ -128,10 +124,6 @@ GF_IP = xt.IonLaserIP(_buffer=buf,
 with open('cache/SPS_lin.json', 'r') as fid:
     loaded_dct = json.load(fid)
 SPS_lin = xt.Line.from_dict(loaded_dct)
-
-
-
-
 
 
 
@@ -149,104 +141,220 @@ twiss = pickle.load(a_file)
 #%%
 ##################
 #     Tracking   #
-##################
 
+particles_old=particles0.copy()
+particles0.delta = abs(particles_old.delta)
+#particles0.delta = 1e-1
 
+disp=twiss['dx']
 
-disp_x_0=5
+disp_sum=sum(disp)
+
+disp_x_0=4
 
 
 arc=xt.LinearTransferMatrix(Q_x=twiss['qx'], Q_y=twiss['qy'],
 beta_x_0=twiss['betx'][0], beta_x_1=twiss['betx'][-1], beta_y_0=twiss['bety'][0], beta_y_1=twiss['bety'][-1],
 alpha_x_0=twiss['alfx'][0], alpha_x_1=twiss['alfx'][-1], alpha_y_0=twiss['alfy'][0], alpha_y_1=twiss['alfy'][-1],
 disp_x_0=disp_x_0, disp_x_1=disp_x_0, disp_y_0=0, disp_y_1=0,
-Q_s=twiss['qs'], beta_s=twiss['betz0'],
+Q_s=0, beta_s=twiss['betz0'],
 chroma_x=twiss['dqx'], chroma_y=twiss['dqy'])
 
 
 SPS_lin = xt.Line()
 
 
-for i in range(1):
-        SPS_lin.append_element(GF_IP, f'GammaFactory_IP{i}')
+cavity=xt.Cavity(voltage=1e4,frequency=1e6,lag=90)
+
+#SPS_lin.append_element(cavity, name='cavity')
 
 SPS_lin.append_element(arc,'SPS_LinearTransferMatrix')
-
-
-
-num_turns=int(1)
-
-lin_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
+# for i in range(1):
+#         SPS_lin.append_element(GF_IP, f'GammaFactory_IP{i}')
 
 
 
 
-lin_tracker.track(particles0, num_turns=num_turns, turn_by_turn_monitor=True)
 
-# for i in range(100):
-#     lin_tracker.track(particles0)    
+num_turns=int(1*1e5)
+n_part=len(particles_old.x)
 
 
-excited = (particles0.state == 2)
-true=any(excited)
+lin_tracker = xt.Tracker(_context=context, _buffer=buf, line=sequence)
 
-print('true',true)
+delta_old = particles_old.delta
 
-#%%
-##################
-#    Emmitance   #
-##################
 
-x = lin_tracker.record_last_track.x
-px = lin_tracker.record_last_track.px
 
-y = lin_tracker.record_last_track.y
-py = lin_tracker.record_last_track.py
 
-zeta = lin_tracker.record_last_track.zeta
-delta = lin_tracker.record_last_track.delta
+x=[]
+px=[]
 
-#%%
-################
-# Phase Space #
-################
+a1=-0.0010
+a2=-0.0008
 
-#shift=0.0020
-import matplotlib.pyplot as plt
+a1=0.0015
+a2=0.0032
+
+
+de=hw0*0.5*2.0*gamma
+
+cutoff=500
+    
+max_x_list=[]
+min_x_list=[]
+lower_bound_list=[]
+
+energy_list=[]
+delta_list = []
+
+for i in tqdm(range(num_turns)):
+    x.append(particles0.x[0])
+    px.append(particles0.px[0])
+    
+    delta_list.append(particles0.delta[0])
+    
+    if i % cutoff==0:
+        #print(i)
+        avg_x=x[i-cutoff:i]
+        
+    max_x = max(avg_x,default=a2)
+    min_x = min(avg_x,default=a1)
+    
+    max_x_list.append(max_x)
+    min_x_list.append(min_x)
+    
+    length=(max_x-min_x)
+    
+    lower_bound=0.85*(min_x+max_x)
+    lower_bound=max_x-0.05*length    
+    lower_bound_list.append(lower_bound)
+    
+    #a1=lower_bound
+    #a2=max_x
+    
+    
+    
+    if min(a1,a2) < particles0.x[0] < max(a1,a2):
+        #print(particles0.delta[0])
+        
+        if particles0.delta[0]>0:
+            print('true')
+            
+            particles0.add_to_energy(-de*500)
+            
+            energy_list.append(particles0.energy)
+    
+    lin_tracker.track(particles0)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    #plt.scatter(x[i:i+cutoff:],px[i:i+cutoff],color='red')
+    #plt.savefig('images/turn'+str(i)+'.png')
+
+
+#x2=lin_tracker.record_last_track.x  
+    
+
+# plt.figure()
+# plt.scatter(x[:cutoff:],px[:cutoff],label='first 100 turns')
+# plt.scatter(x[-cutoff:],px[-cutoff:],label='last 100 turns')    
+
+# plt.axvline(a1,color='red',label='kick location')
+# plt.axvline(a2,color='red')
+
+
+# plt.legend()
+# plt.title('Strong kick with dispersion')
+# plt.xlabel('x')
+# plt.ylabel('px')
 
 plt.figure()
-plt.scatter(x,px,label="all particles")
-plt.scatter(x[excited],px[excited],label='excited')
-
-# plt.axvline(x=0.0015 , color='red')
-plt.axvline(laser_x, color='red',label='laser location')
-
-plt.xlabel('x(m)')
-plt.ylabel('px')
-plt.legend()
-plt.title('Fraction of particles that are excited')
-
-
-#%%
-
-# from emittance import emittance_2d
-
-# det = emittance_2d(lin_tracker,particles0,disp_x_0)
+plt.plot(delta_list)
 
 #%%
 
 
+np.save('cache/x.npy', x)
+np.save('cache/px.npy', px)
+np.save('cache/max_x_list.npy', max_x_list)
+np.save('cache/min_x_list.npy', min_x_list)
+np.save('cache/lower_bound_list.npy', lower_bound_list)
+
+
+#%%
+
+
+# from matplotlib.animation import ArtistAnimation
+
+# fig = plt.figure() 
+# ax  = fig.add_subplot(111) 
+
+
+# images = []
+
+# for i in range(0,num_turns-sample):
+#     value=i
+#     line, = ax.plot(x[0:sample],px[0:sample])
+#     line, = ax.plot(x[int(value):int(value)+sample],px[int(value):int(value)+sample],color='red')
+#     images.append((line,))
+
+# line_anim = ArtistAnimation(fig, images, interval=sample, blit=True)
+# #line_anim.save('my_animation.mp4')
+# line_anim.save('my_animation.gif')
+# #plt.show()
+
+
+#%%
+
+# import mpl_interactions.ipyplot as iplt
+
+# freq = tau = np.linspace(1, num_turns-sample)
+
+# def f_x(freq):
+#     return x[int(freq):int(freq)+sample]
+
+
+# def f_y(freq):
+#     return px[int(freq):int(freq)+sample]
+
+
+# fig, ax = plt.subplots()
+# controls = iplt.plot(
+#     f_x,
+#     f_y,
+#     freq=freq,
+#     xlim="auto",
+#     ylim="auto",
+#     label="interactive!",
+# )
 
 
 
+#%%
 
 
+# import holoviews as hv
 
 
+# dim_x  = hv.Dimension('x',  unit='mm', range=(-4,+4))
+# dim_px = hv.Dimension('px', unit='mrad', label="x'", range=(-0.12,+0.12))
 
+# #hv.Scatter(x,px,kdims=['x','px'])
 
-
-
-
-
-
+# hv.Points((x, px), kdims=[dim_x,dim_px])

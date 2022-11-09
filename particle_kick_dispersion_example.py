@@ -6,8 +6,7 @@ import xobjects as xo
 import xtrack as xt
 import xpart as xp
 
-import matplotlib.pyplot as plt
-from tqdm import tqdm
+
 ####################
 # Choose a context #
 ####################
@@ -141,13 +140,13 @@ twiss = pickle.load(a_file)
 #%%
 ##################
 #     Tracking   #
+##################
 
-particles_old=particles0.copy()
-particles0.delta = abs(particles_old.delta)
-#particles0.delta = 1e-1
+particles0.delta=abs(particles0.delta)
+particles0.delta=1
 
 
-disp_x_0=0.4
+disp_x_0=-0.37
 
 
 arc=xt.LinearTransferMatrix(Q_x=twiss['qx'], Q_y=twiss['qy'],
@@ -160,201 +159,87 @@ chroma_x=twiss['dqx'], chroma_y=twiss['dqy'])
 
 SPS_lin = xt.Line()
 
-#from sps line
-frequency=200266000.0
-lag=180
-voltage=3000000.0
-
-cavity=xt.Cavity(voltage=frequency,frequency=voltage,lag=lag)
-
-#SPS_lin.append_element(cavity, name='cavity')
-
 SPS_lin.append_element(arc,'SPS_LinearTransferMatrix')
 # for i in range(1):
 #         SPS_lin.append_element(GF_IP, f'GammaFactory_IP{i}')
 
 
 
-
-
-num_turns=int(3*1e5)
-n_part=len(particles_old.x)
-
+num_turns=int(1*1e4)
+num_turns=int(1*1e3)
 
 lin_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
+lin_tracker2 = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
 
-delta_old = particles_old.delta
+import datetime
+first_time = datetime.datetime.now()
 
-
-
-
-x=[]
-px=[]
-
-a1=-0.0010
-a2=-0.0008
-
-a1=0.0014
-a2=0.0016
+lin_tracker.track(particles0, num_turns=2100, turn_by_turn_monitor=True)
 
 
-de=hw0*0.5*2.0*gamma
 
-cutoff=500
-    
-max_x_list=[]
-min_x_list=[]
-lower_bound_list=[]
+#particles0.add_to_energy(delta_energy=1)
 
-energy_list=[]
-delta_list = []
-
-for i in tqdm(range(num_turns)):
-    x.append(particles0.x[0])
-    px.append(particles0.px[0])
-    
-    delta_list.append(particles0.delta[0])
-    
-    if i % cutoff==0:
-        #print(i)
-        avg_x=x[i-cutoff:i]
-        
-    max_x = max(avg_x,default=a2)
-    min_x = min(avg_x,default=a1)
-    
-    max_x_list.append(max_x)
-    min_x_list.append(min_x)
-    
-    length=(max_x-min_x)
-    
-    lower_bound=0.85*(min_x+max_x)
-    lower_bound=max_x-0.05*length
-    lower_bound_list.append(lower_bound)
-    
-    #a1=lower_bound
-    #a2=max_x
-    
-    
-    
-    if min(a1,a2) < particles0.x[0] < max(a1,a2):
-        #print(particles0.delta[0])
-        
-        if particles0.delta[0]>0:
-            print('true')
-            
-            particles0.add_to_energy(-de*100)
-            
-            energy_list.append(particles0.energy)
-    
-    lin_tracker.track(particles0)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    #plt.scatter(x[i:i+cutoff:],px[i:i+cutoff],color='red')
-    #plt.savefig('images/turn'+str(i)+'.png')
+particles00 = xp.Particles(_context=context,
+    mass0=particles0.mass0, q0=particles0.q0, p0c=particles0.p0c, # 7 TeV
+    x=particles0.x, px=particles0.px, y=particles0.y, py=particles0.py,
+    zeta=particles0.zeta, delta=0.3*particles0.delta)
 
 
-#x2=lin_tracker.record_last_track.x  
-    
-# plt.figure()
-# plt.scatter(x[:cutoff:],px[:cutoff],label='first 100 turns')
-# plt.scatter(x[-cutoff:],px[-cutoff:],label='last 100 turns')    
+lin_tracker2.track(particles00, num_turns=num_turns, turn_by_turn_monitor=True)
 
-# plt.axvline(a1,color='red',label='kick location')
-# plt.axvline(a2,color='red')
-
-
-# plt.legend()
-# plt.title('Strong kick with dispersion')
-# plt.xlabel('x')
-# plt.ylabel('px')
-
-plt.figure()
-plt.plot(delta_list)
-
-#%%
-
-
-np.save('cache/x.npy', x)
-np.save('cache/px.npy', px)
-np.save('cache/max_x_list.npy', max_x_list)
-np.save('cache/min_x_list.npy', min_x_list)
-np.save('cache/lower_bound_list.npy', lower_bound_list)
-
-
-#%%
-
-
-# from matplotlib.animation import ArtistAnimation
-
-# fig = plt.figure() 
-# ax  = fig.add_subplot(111) 
-
-
-# images = []
-
-# for i in range(0,num_turns-sample):
-#     value=i
-#     line, = ax.plot(x[0:sample],px[0:sample])
-#     line, = ax.plot(x[int(value):int(value)+sample],px[int(value):int(value)+sample],color='red')
-#     images.append((line,))
-
-# line_anim = ArtistAnimation(fig, images, interval=sample, blit=True)
-# #line_anim.save('my_animation.mp4')
-# line_anim.save('my_animation.gif')
-# #plt.show()
-
-
-#%%
-
-# import mpl_interactions.ipyplot as iplt
-
-# freq = tau = np.linspace(1, num_turns-sample)
-
-# def f_x(freq):
-#     return x[int(freq):int(freq)+sample]
-
-
-# def f_y(freq):
-#     return px[int(freq):int(freq)+sample]
-
-
-# fig, ax = plt.subplots()
-# controls = iplt.plot(
-#     f_x,
-#     f_y,
-#     freq=freq,
-#     xlim="auto",
-#     ylim="auto",
-#     label="interactive!",
-# )
 
 
 
 #%%
+##################
+#    Emmitance   #
+##################
+
+from matplotlib import rcParams, rcParamsDefault
+rcParams.update(rcParamsDefault)
+
+import matplotlib.pyplot as plt
+
+x = lin_tracker.record_last_track.x
+px = lin_tracker.record_last_track.px
+
+y = lin_tracker.record_last_track.y
+py = lin_tracker.record_last_track.py
+
+zeta = lin_tracker.record_last_track.zeta
+delta = lin_tracker.record_last_track.delta
+
+x2 = lin_tracker2.record_last_track.x
+px2 = lin_tracker2.record_last_track.px
+
+y2 = lin_tracker2.record_last_track.y
+py2 = lin_tracker2.record_last_track.py
+
+zeta2 = lin_tracker2.record_last_track.zeta
+delta2 = lin_tracker2.record_last_track.delta
 
 
-# import holoviews as hv
+ 
+figure = plt.figure
+ax = plt.gca()
+
+num_particles = len(x)
+
+for i in range(num_particles):
+    # create an axes object in the figure
+   
+    ax.scatter(x[i,:],px[i,:], color='red', alpha=1,label="Default particle" if i == 0 else "")
+    #ax.legend()
+    ax.scatter(x2[i,:],px2[i,:], color='blue', alpha=1,label="Particle with a negative kick" if i == 0 else "")
+    #ax.legend()
 
 
-# dim_x  = hv.Dimension('x',  unit='mm', range=(-4,+4))
-# dim_px = hv.Dimension('px', unit='mrad', label="x'", range=(-0.12,+0.12))
-
-# #hv.Scatter(x,px,kdims=['x','px'])
-
-# hv.Points((x, px), kdims=[dim_x,dim_px])
+plt.legend()
+plt.title(f'Transverse phase space disp={disp_x_0}')
+plt.xlim([-1.2,1.2])
+plt.ylim([-0.025,0.025])
+#plt.ylim(-2,2)
+plt.xlabel('x(m)')
+plt.ylabel('px')
+plt.show()
