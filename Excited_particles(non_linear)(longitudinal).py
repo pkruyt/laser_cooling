@@ -127,70 +127,22 @@ GF_IP = xt.IonLaserIP(_buffer=buf,
 
 
 
-#%%
-##################
-#  Import Twiss  #
-##################
-
-with open('cache/SPS_lin.json', 'r') as fid:
-    loaded_dct = json.load(fid)
-SPS_lin = xt.Line.from_dict(loaded_dct)
-
-
-
-
 
 
 
 # Load particles from json file to selected context
 with open('cache/particles_old.json', 'r') as fid:
     particles0= xp.Particles.from_dict(json.load(fid), _context=context)
-    
-import pickle
+   
 
-a_file = open("cache/twiss.pkl", "rb")
-
-twiss = pickle.load(a_file)    
-
-    
-#%%
-##################
-#     Tracking   #
-##################
-
-
-
-disp_x_0=0
-
-
-arc=xt.LinearTransferMatrix(Q_x=twiss['qx'], Q_y=twiss['qy'],
-beta_x_0=twiss['betx'][0], beta_x_1=twiss['betx'][-1], beta_y_0=twiss['bety'][0], beta_y_1=twiss['bety'][-1],
-alpha_x_0=twiss['alfx'][0], alpha_x_1=twiss['alfx'][-1], alpha_y_0=twiss['alfy'][0], alpha_y_1=twiss['alfy'][-1],
-disp_x_0=disp_x_0, disp_x_1=disp_x_0, disp_y_0=0, disp_y_1=0,
-Q_s=twiss['qs'], beta_s=twiss['betz0'],
-chroma_x=twiss['dqx'], chroma_y=twiss['dqy'])
-
-
-SPS_lin = xt.Line()
-
-
-for i in range(1):
-        SPS_lin.append_element(GF_IP, f'GammaFactory_IP{i}')
-
-SPS_lin.append_element(arc,'SPS_LinearTransferMatrix')
-
-
-
-num_turns=int(1e7)
-
-#lin_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
-
-
-
-#lin_tracker.track(particles0, num_turns=num_turns, turn_by_turn_monitor=True)
+num_turns=int(1e0)
 
 
 SPS_non=xt.Line(sequence)
+
+for i in range(1):
+        SPS_non.append_element(GF_IP, f'GammaFactory_IP{i}')
+
 
 non_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_non)
 
@@ -215,13 +167,15 @@ py = non_tracker.record_last_track.py
 zeta = non_tracker.record_last_track.zeta
 delta = non_tracker.record_last_track.delta
 
+state=non_tracker.record_last_track.state
+
 #%%
 ################
 # Phase Space #
 ################
 
 #shift=0.0020
-# import matplotlib.pyplot as plt
+
 
 # plt.figure()
 # plt.scatter(x,px,label="all particles")
@@ -240,9 +194,78 @@ delta = non_tracker.record_last_track.delta
 
 
 #%%
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import numpy as np
 
-np.save('cache/x_laser.npy', x)
-np.save('cache/px_laser.npy', px)
+
+
+
+x1 = zeta
+y1 = delta
+
+x = zeta[excited]
+y = delta[excited]
+
+
+fraction=len(x)/len(x1)
+
+#fontsize=12
+
+fig = plt.figure(figsize=(12,12))
+gs = gridspec.GridSpec(3, 3)
+ax_main = plt.subplot(gs[1:3, :2])
+ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
+ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
+
+ax_main.scatter(x1,y1,marker='.',label='all particles',linewidths=5)    
+ax_main.scatter(x,y,marker='.',label='excited',linewidths=5)
+#ax_main.set(xlabel="x(mm)", ylabel="px")
+ax_main.set_xlabel('z')
+ax_main.set_ylabel('delta')
+
+
+ax_xDist.hist(x,bins=100,align='mid')
+ax_xDist.set(ylabel='count')
+ax_xCumDist = ax_xDist.twinx()
+ax_xCumDist.hist(x,bins=100,cumulative=True,histtype='step',density=True,color='r',align='mid')
+ax_xCumDist.tick_params('y', colors='r')
+ax_xCumDist.set_ylabel('cumulative',color='r')
+
+ax_yDist.hist(y,bins=100,orientation='horizontal',align='mid')
+ax_yDist.set(xlabel='count')
+ax_yCumDist = ax_yDist.twiny()
+ax_yCumDist.hist(y,bins=100,cumulative=True,histtype='step',density=True,color='r',align='mid',orientation='horizontal')
+ax_yCumDist.tick_params('x', colors='r')
+ax_yCumDist.set_xlabel('cumulative',color='r')
+
+
+# ax_main.axvline(laser_x*1e3, color='red',label='laser location')
+ax_main.legend(loc='best')
+#ax_main.figtext(0.5,0.5,'fraction of excited ions:'+str(fraction))
+
+
+
+
+
+fig.text(0.25,0.15,"%.2f%% of ions excited" % (100*len(x)/len(x1)),fontsize=15)
+fig.suptitle('Fraction of particles that are excited',x=0.5,y=0.92,fontsize=20)
+plt.show()
+
+#%%
+
+
+
+
+
+#%%
+
+# np.save('cache/x_laser.npy', x)
+# np.save('cache/px_laser.npy', px)
+# np.save('cache/y_laser.npy', y)
+# np.save('cache/py_laser.npy', py)
+# np.save('cache/zeta_laser.npy', zeta)
+# np.save('cache/delta_laser.npy', delta)
 
 
 #%%

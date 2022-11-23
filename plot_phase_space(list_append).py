@@ -12,11 +12,11 @@ from matplotlib.widgets import Slider
 # with open('stuff2.pkl', 'rb') as f:
 #    x2,px2 = pickle.load(f)
    
-x=np.load('cache/x.npy')
-px=np.load('cache/px.npy')
-max_x_list=np.load('cache/max_x_list.npy')
-min_x_list=np.load('cache/min_x_list.npy')
-lower_bound_list=np.load('cache/lower_bound_list.npy')
+x=np.load('cache/x.npy').tolist()
+px=np.load('cache/px.npy').tolist()
+max_x_list=np.load('cache/max_x_list.npy').tolist()
+min_x_list=np.load('cache/min_x_list.npy').tolist()
+lower_bound_list=np.load('cache/lower_bound_list.npy').tolist()
 
 # x=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/x.npy')
 # px=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/px.npy')
@@ -26,10 +26,7 @@ lower_bound_list=np.load('cache/lower_bound_list.npy')
 
 
 
-x=np.load('cache/x_laser.npy')[0]
-px=np.load('cache/px_laser.npy')[0]
-
-num_turns = len(x)
+num_turns = np.size(x)
 
 
 a1=-0.0010
