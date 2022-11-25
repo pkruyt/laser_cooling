@@ -165,7 +165,7 @@ alpha_y_0=twiss['alfy'][0], alpha_y_1=twiss['alfy'][-1],
 disp_x_0=twiss['dx'][0], disp_x_1=twiss['dx'][-1],
 disp_y_0=twiss['dy'][0], disp_y_1=twiss['dy'][-1],
 beta_s=twiss['betz0'],
-Q_s=twiss['qs'],
+Q_s=-twiss['qs'],
 #lag=0*np.pi,
 chroma_x=twiss['dqx'], chroma_y=twiss['dqy'])
 
@@ -202,6 +202,7 @@ delta_lin = SPS_lin_tracker.record_last_track.delta
 
 
 #################################################################################
+
 
 x_nonlin = SPS_nonlin_tracker.record_last_track.x
 px_nonlin = SPS_nonlin_tracker.record_last_track.px
