@@ -134,9 +134,11 @@ GF_IP = xt.IonLaserIP(_buffer=buf,
 # Load particles from json file to selected context
 with open('cache/particles_old.json', 'r') as fid:
     particles0= xp.Particles.from_dict(json.load(fid), _context=context)
-   
 
-num_turns=int(1e3)
+num_particles=len(particles0.x)    
+
+
+
 
 
 SPS_non=xt.Line(sequence)
@@ -145,34 +147,39 @@ for i in range(1):
         SPS_non.append_element(GF_IP, f'GammaFactory_IP{i}')
 
 
-non_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_non)
-
-non_tracker.track(particles0, num_turns=num_turns, turn_by_turn_monitor=True)
-
-excited = (particles0.state == 2)
-true=any(excited)
-
-print('true',true)
 
 #%%
-##################
-#    Emmitance   #
-##################
 
-x = non_tracker.record_last_track.x
-px = non_tracker.record_last_track.px
-
-y = non_tracker.record_last_track.y
-py = non_tracker.record_last_track.py
-
-zeta = non_tracker.record_last_track.zeta
-delta = non_tracker.record_last_track.delta
-
-state=non_tracker.record_last_track.state
+SPS_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_non)
 
 
-state0=state[0,:]
-state00=state[:,0]
+num_turns=int(2e0)
+
+
+monitor = xt.ParticlesMonitor(_context=context,
+                              start_at_turn=0, stop_at_turn=num_turns,
+                              #n_repetitions=3,      # <--
+                              #repetition_period=20, # <--
+                              num_particles=num_particles)
+
+
+
+
+
+for iturn in tqdm(range(num_turns)):
+    monitor.track(particles0)
+    SPS_tracker.track(particles0)
+    
+    
+x=monitor.x
+px=monitor.px
+y=monitor.y
+py=monitor.py
+zeta=monitor.zeta
+delta=monitor.delta
+state=monitor.state
+    
+
 
 
 

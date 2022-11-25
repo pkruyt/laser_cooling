@@ -219,9 +219,9 @@ state=monitor.state
 # true=any(excited)
 
 # print('true',true)
-plt.figure()
-plt.scatter(x,y)
-plt.show()
+# plt.figure()
+# plt.scatter(x,y)
+# plt.show()
 #%%
 
 np.save('cache/x.npy', x)
