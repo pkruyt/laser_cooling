@@ -9,7 +9,7 @@ import xpart as xp
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-
+import pickle
 ####################
 # Choose a context #
 ####################
@@ -20,9 +20,6 @@ context = xo.ContextCpu()
 #context = xo.ContextPyopencl('0.0')
 
 buf = context.new_buffer()
-
-
-#num_turns = int(1e2)
 
 
 # Ion properties:
@@ -59,6 +56,27 @@ fname_sequence ='/home/pkruyt/cernbox/xsuite/xtrack/test_data/sps_w_spacecharge/
 with open(fname_sequence, 'r') as fid:
      input_data = json.load(fid)
 sequence = xt.Line.from_dict(input_data['line'])
+
+
+a_file = open("cache/twiss.pkl", "rb")
+
+twiss = pickle.load(a_file)    
+
+arc=xt.LinearTransferMatrix(Q_x=twiss['qx'], Q_y=twiss['qy'],
+beta_x_0=twiss['betx'][0], beta_x_1=twiss['betx'][-1],
+beta_y_0=twiss['bety'][0], beta_y_1=twiss['bety'][-1],
+alpha_x_0=twiss['alfx'][0], alpha_x_1=twiss['alfx'][-1],
+alpha_y_0=twiss['alfy'][0], alpha_y_1=twiss['alfy'][-1],
+disp_x_0=twiss['dx'][0], disp_x_1=twiss['dx'][-1],
+disp_y_0=twiss['dy'][0], disp_y_1=twiss['dy'][-1],
+beta_s=twiss['betz0'],
+Q_s=-twiss['qs'],
+chroma_x=twiss['dqx'], chroma_y=twiss['dqy'])
+
+SPS_lin = xt.Line()
+
+
+SPS_lin.append_element(arc,'SPS_LinearTransferMatrix')
 
 #%% 
 ##################
@@ -102,12 +120,7 @@ print('Laser wavelength = %.2f nm' % (lambda_l/1e-9))
 laser_waist_radius = 1.3e-3
 #laser_waist_radius = 1.3e-7
 
-laser_x=0.0015000
-#laser_x=0.0040000
-w=0.001300
-#laser_x=0.00100
-range1=laser_x+w
-range2=laser_x-w
+laser_x=0.0020000
 
 GF_IP = xt.IonLaserIP(_buffer=buf,
                       laser_x=laser_x,
@@ -121,25 +134,31 @@ GF_IP = xt.IonLaserIP(_buffer=buf,
                       laser_waist_radius = laser_waist_radius, # m
                       ion_excitation_energy = hw0, # eV
                       ion_excited_lifetime  = 76.6e-12, # sec
-   
-                        
+                          
    )
 
-#%%
+
+
+
+
 
 # Load particles from json file to selected context
 with open('cache/particles_old.json', 'r') as fid:
     particles0= xp.Particles.from_dict(json.load(fid), _context=context)
-   
-particles0.y=0
-particles0.py=0
 
-num_particles=len(particles0.x)
+num_particles=len(particles0.x)    
 
-SPS=xt.Line(sequence)
 
-# for i in range(1):
-#         SPS.append_element(GF_IP, f'GammaFactory_IP{i}')
+# particles0.y=0
+# particles0.py=0
+
+
+#SPS=xt.Line(sequence)
+
+
+
+for i in range(1):
+        SPS_lin.append_element(GF_IP, f'GammaFactory_IP{i}')
 
 #%%
 
@@ -156,40 +175,30 @@ Ksq = 0.01 # 1/m^2
 k  = np.sqrt(Ksq) # 1/m
 kl = k*Lsq
 
-order=2 #1=dipole 2=quad
-
 
 
 
 skew_quad=xt.Multipole(order=0, 
-                       knl=None,
+                       #knl=None,
                        ksl=[0,Ksq],
                        length=Lsq)
 
 
-SPS.append_element(skew_quad, 'skew_quad')
+
+for i in range(1):
+        SPS_lin.append_element(skew_quad, f'skew_quad{i}')
 
 
-# order [int]: Horizontal shift. Default is 0.
 
-# knl [m^-n, array]: Normalized integrated strength of the normal components.
-
-# ksl [m^-n, array]: Normalized integrated strength of the skew components.
-
-# hxl [rad]: Rotation angle of the reference trajectory in the horizontal plane.
-
-# hyl [rad]: Rotation angle of the reference trajectory in the vertical plane.
-
-# length [m]: Length of the originating thick multipole.
 
 #%%
 
-SPS_tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS)
+
+num_turns=int(1e5)
+
+tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
 
 
-num_turns=int(1e2)
-
-   
 
 monitor = xt.ParticlesMonitor(_context=context,
                               start_at_turn=0, stop_at_turn=num_turns,
@@ -198,13 +207,10 @@ monitor = xt.ParticlesMonitor(_context=context,
                               num_particles=num_particles)
 
 
-
-
-
 for iturn in tqdm(range(num_turns)):
     monitor.track(particles0)
-    SPS_tracker.track(particles0)
-    
+    tracker.track(particles0)
+   
     
 x=monitor.x
 px=monitor.px
@@ -213,16 +219,7 @@ py=monitor.py
 zeta=monitor.zeta
 delta=monitor.delta
 state=monitor.state
-    
 
-# excited = (particles0.state == 2)
-# true=any(excited)
-
-# print('true',true)
-# plt.figure()
-# plt.scatter(x,y)
-# plt.show()
-#%%
 
 np.save('cache/x.npy', x)
 np.save('cache/px.npy', px)
@@ -230,7 +227,74 @@ np.save('cache/y.npy', y)
 np.save('cache/py.npy', py)
 np.save('cache/zeta.npy', zeta)
 np.save('cache/delta.npy', delta)
-np.save('cache/state.npy', state)
+np.save('cache/state.npy', state)   
+ 
+
+#%%
+# import matplotlib.pyplot as plt
+# import matplotlib.gridspec as gridspec
+
+ 
+# for turn in tqdm(range(num_turns)):
+
+#     x1 = zeta[:,turn]
+#     y1 = delta[:,turn]
+
+#     x1=np.expand_dims(x1,axis=1)
+#     y1=np.expand_dims(y1,axis=1)
 
 
+#     x = x1[state[:,turn]==2]
+#     y = y1[state[:,turn]==2]
+
+
+
+
+
+#     fraction=len(x)/len(x1)
+
+#     #fontsize=12
+
+#     fig = plt.figure(figsize=(12,12))
+#     gs = gridspec.GridSpec(3, 3)
+#     ax_main = plt.subplot(gs[1:3, :2])
+#     ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
+#     ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
+
+#     ax_main.scatter(x1,y1,marker='.',label='all particles',linewidths=5)    
+#     ax_main.scatter(x,y,marker='.',label='excited',linewidths=5)
+#     #ax_main.set(xlabel="x(mm)", ylabel="px")
+#     ax_main.set_xlabel('z')
+#     ax_main.set_ylabel('delta')
+
+
+#     ax_xDist.hist(x,bins=100,align='mid')
+#     ax_xDist.set(ylabel='count')
+#     ax_xCumDist = ax_xDist.twinx()
+#     ax_xCumDist.hist(x,bins=100,cumulative=True,histtype='step',density=True,color='r',align='mid')
+#     ax_xCumDist.tick_params('y', colors='r')
+#     ax_xCumDist.set_ylabel('cumulative',color='r')
+
+#     ax_yDist.hist(y,bins=100,orientation='horizontal',align='mid')
+#     ax_yDist.set(xlabel='count')
+#     ax_yCumDist = ax_yDist.twiny()
+#     ax_yCumDist.hist(y,bins=100,cumulative=True,histtype='step',density=True,color='r',align='mid',orientation='horizontal')
+#     ax_yCumDist.tick_params('x', colors='r')
+#     ax_yCumDist.set_xlabel('cumulative',color='r')
+
+
+#     # ax_main.axvline(laser_x*1e3, color='red',label='laser location')
+#     ax_main.legend(loc='best')
+#     #ax_main.figtext(0.5,0.5,'fraction of excited ions:'+str(fraction))
+
+
+
+
+
+#     fig.text(0.25,0.15,"%.2f%% of ions excited" % (100*len(x)/len(x1)),fontsize=15)
+#     fig.suptitle('Fraction of particles that are excited',x=0.5,y=0.92,fontsize=20)
+#     #plt.show()
+
+#     fig.savefig(f'images/temp{turn}.png')
+#     plt.close(fig)
 

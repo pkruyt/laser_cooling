@@ -54,6 +54,9 @@ number_of_turns=len(x[0,:])
 #  X  #
 #######
 
+ylim_manual=(-0.00011957501236985238, 0.00011119590367708776)
+xlim_manual=(-0.005120480059662477, 0.005930270032610736)
+
 sample=1 #how many turns are plotted in one figure
 
 
@@ -82,7 +85,7 @@ freq_slider = Slider(
     label='Turns',
     valmin=0,
     valmax=number_of_turns-sample,
-    valinit=1,
+    valinit=0,
 )
 
 # The function to be called anytime a slider's value changes
@@ -106,11 +109,19 @@ def update(val):
     ax.scatter(x[:,int(value):int(value)+sample],px[:,int(value):int(value)+sample]
                 ,label='turn evolution')
     
+    ax.scatter( x[:,int(value):int(value)+sample][state[:,int(value)+sample]==2],
+                px[:,int(value):int(value)+sample][state[:,int(value)+sample]==2]
+                ,label='excited',color='red')
+    
+    
     ax.set_xlabel('x(m)')
     ax.set_ylabel('px')
     
     ax.set_xlim(xlim_init)
     ax.set_ylim(ylim_init)
+    
+    # ax.set_xlim(xlim_manual)
+    # ax.set_ylim(ylim_manual)
     
     ax.legend()
 
@@ -120,215 +131,3 @@ def update(val):
     
 freq_slider.on_changed(update)
 
-#%%
-
-#######
-#  Y  #
-#######
-
-# sample=1000
-
-
-# # Create the figure and the line that we will manipulate
-# fig, ax = plt.subplots()
-# line = ax.scatter(y[:,0:sample], py[:,0:sample],color='orange',label='initial')
-
-# ylim_init = ax.get_ylim()
-# xlim_init = ax.get_xlim()
-
-# fig.suptitle('Energy reduction with dispersion')
-# ax.set_xlabel('y(m)')
-# ax.set_ylabel('py')
-
-# ax.legend()
-
-# fig.set_size_inches(18.5, 10.5, forward=True)    
-# fig.subplots_adjust(left=0.25, bottom=0.25)
-
-# axfreq = fig.add_axes([0.25, 0.1, 0.65, 0.03])
-# freq_slider = Slider(
-#     ax=axfreq,
-#     label='Turns',
-#     valmin=0,
-#     valmax=number_of_turns-sample,
-#     valinit=1,
-# )
-
-# # The function to be called anytime a slider's value changes
-# # def update(val):
-# #     value=freq_slider.val
-    
-# #     line.set_xdata(x[value:500])
-# #     line.set_ydata(px[value.val:500])
-# #     fig.canvas.draw_idle()
-
-
-# def update(val):
-#     value=freq_slider.val
-#     ax.clear()
-    
-#     #a1=lower_bound_list[int(value)]
-#     #a2=max_x_list[int(value)]
-    
-    
-#     ax.scatter(y[:,0:sample], py[:,0:sample],color='orange',label='initial')
-#     ax.scatter(y[:,int(value):int(value)+sample],py[:,int(value):int(value)+sample]
-#                 ,label='turn evolution')
-    
-#     ax.set_xlabel('y(m)')
-#     ax.set_ylabel('py')
-    
-#     ax.set_xlim(xlim_init)
-#     ax.set_ylim(ylim_init)
-    
-#     ax.legend()
-
-
-#     #plt.draw()
-
-    
-# freq_slider.on_changed(update)
-
-#%%
-#######
-#  Z  #
-#######
-
-# sample=1000
-
-
-# # Create the figure and the line that we will manipulate
-# fig, ax = plt.subplots()
-# line = ax.scatter(zeta[:,0:sample], delta[:,0:sample],color='orange',label='initial')
-
-# ylim_init = ax.get_ylim()
-# xlim_init = ax.get_xlim()
-
-# fig.suptitle('Energy reduction with dispersion')
-# ax.set_xlabel('zeta(m)')
-# ax.set_ylabel('delta')
-
-# ax.legend()
-
-# fig.set_size_inches(18.5, 10.5, forward=True)    
-# fig.subplots_adjust(left=0.25, bottom=0.25)
-
-# axfreq = fig.add_axes([0.25, 0.1, 0.65, 0.03])
-# freq_slider = Slider(
-#     ax=axfreq,
-#     label='Turns',
-#     valmin=0,
-#     valmax=number_of_turns-sample,
-#     valinit=1,
-# )
-
-# # The function to be called anytime a slider's value changes
-# # def update(val):
-# #     value=freq_slider.val
-    
-# #     line.set_xdata(x[value:500])
-# #     line.set_ydata(px[value.val:500])
-# #     fig.canvas.draw_idle()
-
-
-# def update(val):
-#     value=freq_slider.val
-#     ax.clear()
-    
-#     #a1=lower_bound_list[int(value)]
-#     #a2=max_x_list[int(value)]
-    
-    
-#     ax.scatter(zeta[:,0:sample], delta[:,0:sample],color='orange',label='initial')
-#     ax.scatter(zeta[:,int(value):int(value)+sample],delta[:,int(value):int(value)+sample]
-#                ,label='turn evolution')
-    
-#     ax.set_xlabel('zeta(m)')
-#     ax.set_ylabel('delta')
-    
-#     ax.set_xlim(xlim_init)
-#     ax.set_ylim(ylim_init)
-    
-#     ax.legend()
-
-
-#     #plt.draw()
-
-    
-# freq_slider.on_changed(update)
-
-#%%
-###############
-#  Z state  #
-###############
-
-# sample=1000
-
-# z0=state[:,0]
-# z2=zeta[:,0:sample][state[:,1]]
-# # Create the figure and the line that we will manipulate
-# fig, ax = plt.subplots()
-# line = ax.scatter(zeta[:,0:sample], delta[:,0:sample],color='orange',label='initial')
-# line = ax.scatter(zeta[:,0:sample][state[:,0]], delta[:,0:sample][state[:,0]],color='red',label='state')
-
-
-# ylim_init = ax.get_ylim()
-# xlim_init = ax.get_xlim()
-
-# fig.suptitle('Energy reduction with dispersion')
-# ax.set_xlabel('zeta(m)')
-# ax.set_ylabel('delta')
-
-# ax.legend()
-
-# fig.set_size_inches(18.5, 10.5, forward=True)    
-# fig.subplots_adjust(left=0.25, bottom=0.25)
-
-# axfreq = fig.add_axes([0.25, 0.1, 0.65, 0.03])
-# freq_slider = Slider(
-#     ax=axfreq,
-#     label='Turns',
-#     valmin=0,
-#     valmax=number_of_turns-sample,
-#     valinit=1,
-# )
-
-# # The function to be called anytime a slider's value changes
-# # def update(val):
-# #     value=freq_slider.val
-    
-# #     line.set_xdata(x[value:500])
-# #     line.set_ydata(px[value.val:500])
-# #     fig.canvas.draw_idle()
-
-
-# def update(val):
-#     value=freq_slider.val
-#     ax.clear()
-    
-#     #a1=lower_bound_list[int(value)]
-#     #a2=max_x_list[int(value)]
-    
-    
-#     #ax.scatter(zeta[:,0:sample], delta[:,0:sample],color='orange',label='initial')
-#     ax.scatter(zeta[:,int(value):int(value)+sample],delta[:,int(value):int(value)+sample]
-#                ,label='turn evolution')
-    
-#     ax.scatter( zeta[:,int(value):int(value)+sample][state[:,int(value)+sample]],
-#                delta[:,int(value):int(value)+sample][state[:,int(value)+sample]]
-#                ,label='state')
-    
-    
-#     ax.set_xlabel('zeta(m)')
-#     ax.set_ylabel('delta')
-    
-#     ax.set_xlim(xlim_init)
-#     ax.set_ylim(ylim_init)
-    
-#     ax.legend()
-
-
-#     #plt.draw()
-
-    
-# freq_slider.on_changed(update)

@@ -48,6 +48,17 @@ with open(fname_sequence, 'r') as fid:
      input_data = json.load(fid)
 sequence = xt.Line.from_dict(input_data['line'])
 
+
+fname_sequence ='/home/pkruyt/cernbox/xsuite/xtrack/test_data/sps_w_spacecharge/line_no_spacecharge_and_particle.json'
+
+
+
+with open(fname_sequence, 'r') as fid:
+     input_data = json.load(fid)
+sequence = xt.Line.from_dict(input_data['line'])
+
+
+
 #%%
 ##################
 # Build TrackJob #
