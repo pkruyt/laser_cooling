@@ -1,5 +1,9 @@
 cache/
 images/
+cache_memory/
+cache2/
+
+*.pyc
 
 #files being edited
 *~

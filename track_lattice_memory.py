@@ -70,7 +70,7 @@ alpha_y_0=twiss['alfy'][0], alpha_y_1=twiss['alfy'][-1],
 disp_x_0=twiss['dx'][0], disp_x_1=twiss['dx'][-1],
 disp_y_0=twiss['dy'][0], disp_y_1=twiss['dy'][-1],
 beta_s=twiss['betz0'],
-Q_s=-2*twiss['qs'],
+Q_s=-twiss['qs'],
 chroma_x=twiss['dqx'], chroma_y=twiss['dqy'])
 
 SPS_lin = xt.Line()
@@ -194,7 +194,7 @@ for i in range(1):
 #%%
 
 
-num_turns=int(2e4)
+num_turns=int(4e4)
 
 tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
 
@@ -206,95 +206,69 @@ monitor = xt.ParticlesMonitor(_context=context,
                               #repetition_period=20, # <--
                               num_particles=num_particles)
 
+num_cycles=int(1e3)
 
-for iturn in tqdm(range(num_turns)):
-    monitor.track(particles0)
-    tracker.track(particles0)
-   
+
+for i in tqdm(range(num_cycles)):
+
+    fp_x = np.memmap('/home/pkruyt/Documents/cache_memory/x.npy', dtype=np.float64, mode='w+', shape=(num_particles,num_turns))
+    fp_px = np.memmap('/home/pkruyt/Documents/cache_memory/px.npy', dtype=np.float64, mode='w+', shape=(num_particles,num_turns))
     
-x=monitor.x
-px=monitor.px
-y=monitor.y
-py=monitor.py
-zeta=monitor.zeta
-delta=monitor.delta
-state=monitor.state
+    fp_y = np.memmap('/home/pkruyt/Documents/cache_memory/y.npy', dtype=np.float64, mode='w+', shape=(num_particles,num_turns))
+    fp_py = np.memmap('/home/pkruyt/Documents/cache_memory/py.npy', dtype=np.float64, mode='w+', shape=(num_particles,num_turns))
+    
+    fp_zeta = np.memmap('/home/pkruyt/Documents/cache_memory/zeta.npy', dtype=np.float64, mode='w+', shape=(num_particles,num_turns))
+    fp_delta = np.memmap('/home/pkruyt/Documents/cache_memory/delta.npy', dtype=np.float64, mode='w+', shape=(num_particles,num_turns))
+    
+    fp_state = np.memmap('/home/pkruyt/Documents/cache_memory/state.npy', dtype=np.float64, mode='w+', shape=(num_particles,num_turns))
+    
+    for iturn in (range(num_turns)):
+        #monitor.track(particles0)
+        tracker.track(particles0)
+        
+        fp_x[:, iturn] = particles0.x
+        fp_px[:, iturn] = particles0.px
+    
+        
+        fp_y[:, iturn] = particles0.y
+        fp_py[:, iturn] = particles0.py
+        
+        fp_zeta[:, iturn] = particles0.zeta
+        fp_delta[:, iturn] = particles0.delta
+        fp_state[:, iturn] = particles0.state
+    
+    x = fp_x[:, -1]    
+    px = fp_px[:, -1]    
+    
+    y = fp_y[:, -1]    
+    py = fp_py[:, -1] 
+    
+    zeta = fp_zeta[:, -1]    
+    delta = fp_delta[:, -1] 
+    
+    state = fp_state[:, -1] 
+    
+    np.save(f'/home/pkruyt/Documents/cache_memory/x{i}.npy', x)
+    np.save(f'/home/pkruyt/Documents/cache_memory/px{i}.npy', px)
+    
+    np.save(f'/home/pkruyt/Documents/cache_memory/y{i}.npy', y)
+    np.save(f'/home/pkruyt/Documents/cache_memory/py{i}.npy', py)
+    
+    np.save(f'/home/pkruyt/Documents/cache_memory/zeta{i}.npy', zeta)
+    np.save(f'/home/pkruyt/Documents/cache_memory/delta{i}.npy', delta)
+    
+    np.save(f'/home/pkruyt/Documents/cache_memory/state{i}.npy', state)
+        
+    del fp_x
+    del fp_px
+    
+    del fp_y
+    del fp_py
+    
+    del fp_zeta
+    del fp_delta
+    
+    del fp_state
 
 
-np.save('cache/x.npy', x)
-np.save('cache/px.npy', px)
-np.save('cache/y.npy', y)
-np.save('cache/py.npy', py)
-np.save('cache/zeta.npy', zeta)
-np.save('cache/delta.npy', delta)
-np.save('cache/state.npy', state)   
- 
-
-#%%
-# import matplotlib.pyplot as plt
-# import matplotlib.gridspec as gridspec
-
- 
-# for turn in tqdm(range(num_turns)):
-
-#     x1 = zeta[:,turn]
-#     y1 = delta[:,turn]
-
-#     x1=np.expand_dims(x1,axis=1)
-#     y1=np.expand_dims(y1,axis=1)
-
-
-#     x = x1[state[:,turn]==2]
-#     y = y1[state[:,turn]==2]
-
-
-
-
-
-#     fraction=len(x)/len(x1)
-
-#     #fontsize=12
-
-#     fig = plt.figure(figsize=(12,12))
-#     gs = gridspec.GridSpec(3, 3)
-#     ax_main = plt.subplot(gs[1:3, :2])
-#     ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
-#     ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
-
-#     ax_main.scatter(x1,y1,marker='.',label='all particles',linewidths=5)    
-#     ax_main.scatter(x,y,marker='.',label='excited',linewidths=5)
-#     #ax_main.set(xlabel="x(mm)", ylabel="px")
-#     ax_main.set_xlabel('z')
-#     ax_main.set_ylabel('delta')
-
-
-#     ax_xDist.hist(x,bins=100,align='mid')
-#     ax_xDist.set(ylabel='count')
-#     ax_xCumDist = ax_xDist.twinx()
-#     ax_xCumDist.hist(x,bins=100,cumulative=True,histtype='step',density=True,color='r',align='mid')
-#     ax_xCumDist.tick_params('y', colors='r')
-#     ax_xCumDist.set_ylabel('cumulative',color='r')
-
-#     ax_yDist.hist(y,bins=100,orientation='horizontal',align='mid')
-#     ax_yDist.set(xlabel='count')
-#     ax_yCumDist = ax_yDist.twiny()
-#     ax_yCumDist.hist(y,bins=100,cumulative=True,histtype='step',density=True,color='r',align='mid',orientation='horizontal')
-#     ax_yCumDist.tick_params('x', colors='r')
-#     ax_yCumDist.set_xlabel('cumulative',color='r')
-
-
-#     # ax_main.axvline(laser_x*1e3, color='red',label='laser location')
-#     ax_main.legend(loc='best')
-#     #ax_main.figtext(0.5,0.5,'fraction of excited ions:'+str(fraction))
-
-
-
-
-
-#     fig.text(0.25,0.15,"%.2f%% of ions excited" % (100*len(x)/len(x1)),fontsize=15)
-#     fig.suptitle('Fraction of particles that are excited',x=0.5,y=0.92,fontsize=20)
-#     #plt.show()
-
-#     fig.savefig(f'images/temp{turn}.png')
-#     plt.close(fig)
 

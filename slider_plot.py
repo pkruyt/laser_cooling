@@ -35,6 +35,16 @@ zeta=np.load('cache/zeta.npy')
 delta=np.load('cache/delta.npy')
 state=np.load('cache/state.npy')
 
+
+x=np.load('cache2/x.npy')
+px=np.load('cache2/px.npy')
+y=np.load('cache2/y.npy')
+py=np.load('cache2/py.npy')
+zeta=np.load('cache2/zeta.npy')
+delta=np.load('cache2/delta.npy')
+state=np.load('cache2/state.npy')
+
+
 x0=x[0,:]
 x1=x[1,:]
 x00=x[:,0]
@@ -49,19 +59,18 @@ number_of_turns=len(x[0,:])
 
 #%%
 
-
 #######
 #  X  #
 #######
 
-ylim_manual=(-0.00011957501236985238, 0.00011119590367708776)
-xlim_manual=(-0.005120480059662477, 0.005930270032610736)
+# ylim_manual=(-0.00011957501236985238, 0.00011119590367708776)
+# xlim_manual=(-0.005120480059662477, 0.005930270032610736)
 
 sample=1 #how many turns are plotted in one figure
 
 
-x=y
-px=py
+x=x
+px=px
 
 # Create the figure and the line that we will manipulate
 fig, ax = plt.subplots()
@@ -108,6 +117,7 @@ def update(val):
     ax.scatter(x[:,0:sample], px[:,0:sample],color='orange',label='initial')
     ax.scatter(x[:,int(value):int(value)+sample],px[:,int(value):int(value)+sample]
                 ,label='turn evolution')
+    
     
     ax.scatter( x[:,int(value):int(value)+sample][state[:,int(value)+sample]==2],
                 px[:,int(value):int(value)+sample][state[:,int(value)+sample]==2]
