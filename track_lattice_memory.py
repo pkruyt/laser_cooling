@@ -120,10 +120,26 @@ print('Laser wavelength = %.2f nm' % (lambda_l/1e-9))
 laser_waist_radius = 1.3e-3
 #laser_waist_radius = 1.3e-7
 
-laser_x=0.0020000
+laser_x=0.0030000
 
 GF_IP = xt.IonLaserIP(_buffer=buf,
                       laser_x=laser_x,
+                      
+                      laser_direction_nx = 0,
+                      laser_direction_ny = 0,
+                      laser_direction_nz = -1,
+                      laser_energy         = 5e-3, # J
+                      laser_duration_sigma = sigma_t, # sec
+                      laser_wavelength = lambda_l, # m
+                      laser_waist_radius = laser_waist_radius, # m
+                      ion_excitation_energy = hw0, # eV
+                      ion_excited_lifetime  = 76.6e-12, # sec
+                          
+   )
+
+
+GF_IP = xt.IonLaserIP(_buffer=buf,
+                      laser_x=0.0022500,
                       
                       laser_direction_nx = 0,
                       laser_direction_ny = 0,
@@ -145,6 +161,10 @@ GF_IP = xt.IonLaserIP(_buffer=buf,
 # Load particles from json file to selected context
 with open('cache/particles_old.json', 'r') as fid:
     particles0= xp.Particles.from_dict(json.load(fid), _context=context)
+
+with open('cache/particles_new.json', 'r') as fid:
+    particles0= xp.Particles.from_dict(json.load(fid), _context=context)
+
 
 num_particles=len(particles0.x)    
 
@@ -194,7 +214,7 @@ for i in range(1):
 #%%
 
 
-num_turns=int(4e4)
+num_turns=int(1e1) #4e4 is maximum
 
 tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
 
@@ -271,4 +291,9 @@ for i in tqdm(range(num_cycles)):
     del fp_state
 
 
+
+particles_new = particles0.copy()
+
+with open('cache/particles_new.json', 'w') as fid:
+    json.dump(particles_new.to_dict(), fid, cls=xo.JEncoder)
 

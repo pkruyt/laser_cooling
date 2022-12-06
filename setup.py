@@ -64,7 +64,7 @@ sequence = xt.Line.from_dict(input_data['line'])
 # Build TrackJob #
 ##################
 
-n_part = int(1e3)
+n_part = int(1e4)
 
 SPS_tracker = xt.Tracker(_context=context, _buffer=buf, line=sequence)
 

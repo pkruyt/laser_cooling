@@ -36,25 +36,18 @@ delta=np.load('cache/delta.npy')
 state=np.load('cache/state.npy')
 
 
-x=np.load('cache2/x.npy')
-px=np.load('cache2/px.npy')
-y=np.load('cache2/y.npy')
-py=np.load('cache2/py.npy')
-zeta=np.load('cache2/zeta.npy')
-delta=np.load('cache2/delta.npy')
-state=np.load('cache2/state.npy')
+# x=np.load('cache_memory/x.npy')
+# px=np.load('cache_memory/px.npy')
+# y=np.load('cache_memory/y.npy')
+# py=np.load('cache_memory/py.npy')
+# zeta=np.load('cache_memory/zeta.npy')
+# delta=np.load('cache_memory/delta.npy')
+# state=np.load('cache_memory/state.npy')
 
 
-x0=x[0,:]
-x1=x[1,:]
-x00=x[:,0]
-
-ex0=state[0,:]
-ex00=state[:,0]
 
 number_of_particles=len(x[:,0])
 number_of_turns=len(x[0,:])
-
 
 
 #%%
@@ -66,15 +59,15 @@ number_of_turns=len(x[0,:])
 # ylim_manual=(-0.00011957501236985238, 0.00011119590367708776)
 # xlim_manual=(-0.005120480059662477, 0.005930270032610736)
 
-sample=1 #how many turns are plotted in one figure
 
 
-x=x
-px=px
+
+x=zeta
+px=delta
 
 # Create the figure and the line that we will manipulate
 fig, ax = plt.subplots()
-line = ax.scatter(x[:,0:sample], px[:,0:sample],color='orange',label='initial')
+line = ax.scatter(x[:,0], px[:,0],color='orange',label='initial')
 
 ylim_init = ax.get_ylim()
 xlim_init = ax.get_xlim()
@@ -93,7 +86,7 @@ freq_slider = Slider(
     ax=axfreq,
     label='Turns',
     valmin=0,
-    valmax=number_of_turns-sample,
+    valmax=number_of_turns,
     valinit=0,
 )
 
@@ -106,21 +99,41 @@ freq_slider = Slider(
 #     fig.canvas.draw_idle()
 
 
+
+
+
 def update(val):
-    value=freq_slider.val
+    turn=freq_slider.val
     ax.clear()
+    
+    turn=int(turn)
+    x1 = x[:,turn]
+    y1 = px[:,turn]
+    
+    
+    
+    # x1=np.expand_dims(x1,axis=1)
+    # y1=np.expand_dims(y1,axis=1)
+
+
+    x_exc = x1[state[:,turn]==2]
+    y_exc = y1[state[:,turn]==2]
+
+    
     
     #a1=lower_bound_list[int(value)]
     #a2=max_x_list[int(value)]
     
+    # x_exc = x[state[:,turn]==2]
+    # px_exc = px[state[:,turn]==2]
     
-    ax.scatter(x[:,0:sample], px[:,0:sample],color='orange',label='initial')
-    ax.scatter(x[:,int(value):int(value)+sample],px[:,int(value):int(value)+sample]
+    ax.scatter(x[:,0], px[:,0],color='orange',label='initial')
+    ax.scatter(x[:,turn],px[:,turn]
                 ,label='turn evolution')
     
     
-    ax.scatter( x[:,int(value):int(value)+sample][state[:,int(value)+sample]==2],
-                px[:,int(value):int(value)+sample][state[:,int(value)+sample]==2]
+    ax.scatter( x_exc,
+                y_exc
                 ,label='excited',color='red')
     
     

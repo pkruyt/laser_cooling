@@ -35,13 +35,14 @@ zeta=np.load('cache/zeta.npy')
 delta=np.load('cache/delta.npy')
 state=np.load('cache/state.npy')
 
-x=np.load('cache2/x.npy')
-px=np.load('cache2/px.npy')
-y=np.load('cache2/y.npy')
-py=np.load('cache2/py.npy')
-zeta=np.load('cache2/zeta.npy')
-delta=np.load('cache2/delta.npy')
-state=np.load('cache2/state.npy')
+
+# x=np.load('cache_memory/x.npy')
+# px=np.load('cache_memory/px.npy')
+# y=np.load('cache_memory/y.npy')
+# py=np.load('cache_memory/py.npy')
+# zeta=np.load('cache_memory/zeta.npy')
+# delta=np.load('cache_memory/delta.npy')
+# state=np.load('cache_memory/state.npy')
 
 
 num_turns=np.shape(x)[1]
@@ -55,6 +56,13 @@ z2=zeta[:,2]
 #%%
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+
+# xlim_init=(-0.005865734476107509, 0.0054770649623092985)
+# ylim_init=(-0.00012998686719493268, 0.00012136987865081761)
+
+
+# xlim_init=(-0.000865734476107509, 0.0008770649623092985)
+# ylim_init=(-0.00000998686719493268, 0.00000836987865081761)
 
  
 for turn in tqdm(range(num_turns)):
@@ -105,9 +113,10 @@ for turn in tqdm(range(num_turns)):
         # ax_main.axvline(laser_x*1e3, color='red',label='laser location')
         ax_main.legend(loc='best')
         #ax_main.figtext(0.5,0.5,'fraction of excited ions:'+str(fraction))
+        # ax_main.set_xlim(xlim_init)
+        # ax_main.set_ylim(ylim_init)
     
-    
-    
+        
     
     
         fig.text(0.25,0.15,"%.2f%% of ions excited" % (100*fraction),fontsize=15)
