@@ -139,20 +139,11 @@ GF_IP = xt.IonLaserIP(_buffer=buf,
 
 
 
-
-
-
 # Load particles from json file to selected context
 with open('cache/particles_old.json', 'r') as fid:
     particles0= xp.Particles.from_dict(json.load(fid), _context=context)
 
 
-
-# import statistics
-# statistics.stdev(A_rank)
-# particles_old=particles0.copy()
-
-# max_delta=max(particles_old.delta)
 
 num_particles=len(particles0.x)    
 

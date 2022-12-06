@@ -82,5 +82,10 @@ np.save('cache_memory/zeta.npy', zeta)
 np.save('cache_memory/delta.npy', delta)
 np.save('cache_memory/state.npy', state)     
   
-    
-    
+
+import os
+import glob
+
+files = glob.glob('/home/pkruyt/Documents/cache_memory/*')
+for f in files:
+    os.remove(f)
