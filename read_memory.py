@@ -38,7 +38,7 @@ delta_list=[particles0.delta]
 
 state_list=[particles0.state]
 
-num_cycles=int(1e3)
+num_cycles=int(1e4)
 #num_cycles=int(1e2)
 
 for i in range(num_cycles):

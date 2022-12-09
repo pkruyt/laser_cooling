@@ -78,20 +78,45 @@ SPS_lin = xt.Line()
 
 SPS_lin.append_element(arc,'SPS_LinearTransferMatrix')
 
+# Load particles from json file to selected context
+with open('cache/particles_old.json', 'r') as fid:
+    particles0= xp.Particles.from_dict(json.load(fid), _context=context)
+
+particles_old=particles0.copy()
+
+x_final=np.load('cache/x.npy')[:,-1]
+px_final=np.load('cache/px.npy')[:,-1]
+y_final=np.load('cache/y.npy')[:,-1]
+py_final=np.load('cache/py.npy')[:,-1]
+zeta_final=np.load('cache/zeta.npy')[:,-1]
+delta_final=np.load('cache/delta.npy')[:,-1]
+state_final=np.load('cache/state.npy')[:,-1]
+
+# particles0.x=x_final
+# particles0.px=px_final
+# particles0.y=y_final
+# particles0.py=py_final
+# particles0.zeta=zeta_final
+# particles0.delta=delta_final
+# particles0.state=state_final
+
+# with open('cache/particles_new.json', 'r') as fid:
+#     particles0= xp.Particles.from_dict(json.load(fid), _context=context)
+
+std_delta = particles_old.delta.std()
+
+num_particles=len(particles0.x)    
+
+ 
+
 #%% 
 ##################
 # Laser Cooler #
 ##################
 
-#sigma_dp = 2e-4 # relative ion momentum spread
-
-#bunch_intensity = 1e11
-sigma_z = 22.5e-2
-nemitt_x = 2e-6
-nemitt_y = 2.5e-6
-
-#sigma_dp = sigma_z / beta
 sigma_dp = 2e-4 # relative ion momentum spread
+#sigma_dp = std_delta # relative ion momentum spread
+
 
 #laser-ion beam collision angle
 theta_l = 2.6*np.pi/180 # rad
@@ -106,11 +131,12 @@ lambda_0 = 2*np.pi*hc/hw0 # m -- ion excitation wavelength
 lambda_l = lambda_0*gamma*(1 + beta*np.cos(theta_l)) # m -- laser wavelength
 
 # Shift laser wavelength for fast longitudinal cooling:
-lambda_l = lambda_l*(1+sigma_dp) # m
+lambda_l = lambda_l*(1+1*sigma_dp) # m
 
 laser_frequency = c/lambda_l # Hz
 sigma_w = 2*np.pi*laser_frequency*sigma_dp
 #sigma_w = 2*np.pi*laser_frequency*sigma_dp/2 # for fast longitudinal cooling
+
 
 sigma_t = 1/sigma_w # sec -- Fourier-limited laser pulse
 print('Laser pulse duration sigma_t = %.2f ps' % (sigma_t/1e-12))
@@ -120,7 +146,7 @@ print('Laser wavelength = %.2f nm' % (lambda_l/1e-9))
 laser_waist_radius = 1.3e-3
 #laser_waist_radius = 1.3e-7
 
-laser_x=0.0030000
+laser_x=0.0020000
 
 GF_IP = xt.IonLaserIP(_buffer=buf,
                       laser_x=laser_x,
@@ -136,26 +162,45 @@ GF_IP = xt.IonLaserIP(_buffer=buf,
                       ion_excited_lifetime  = 76.6e-12, # sec
                           
    )
+                          
+   
+
+# GF_IP2 = xt.IonLaserIP(_buffer=buf,
+#                       laser_x=0,
+                      
+#                       laser_direction_nx = 0,
+#                       laser_direction_ny = 0,
+#                       laser_direction_nz = -1,
+#                       laser_energy         = 5e-3, # J
+#                       laser_duration_sigma = sigma_t, # sec
+#                       laser_wavelength = lambda_l, # m
+#                       laser_waist_radius = laser_waist_radius, # m
+#                       ion_excitation_energy = hw0, # eV
+#                       ion_excited_lifetime  = 76.6e-12, # sec
+                          
+#    )
+
+# GF_IP3 = xt.IonLaserIP(_buffer=buf,
+#                       laser_x=0,
+                      
+#                       laser_direction_nx = 0,
+#                       laser_direction_ny = 0,
+#                       laser_direction_nz = -1,
+#                       laser_energy         = 5e-3, # J
+#                       laser_duration_sigma = sigma_t, # sec
+#                       laser_wavelength = lambda_l*(1+0.00011384), # m
+#                       laser_waist_radius = laser_waist_radius, # m
+#                       ion_excitation_energy = hw0, # eV
+#                       ion_excited_lifetime  = 76.6e-12, # sec
+                          
+#    )
 
 
 
-# Load particles from json file to selected context
-with open('cache/particles_old.json', 'r') as fid:
-    particles0= xp.Particles.from_dict(json.load(fid), _context=context)
 
-
-
-num_particles=len(particles0.x)    
-
-
-
-
-#SPS=xt.Line(sequence)
-
-
-
-for i in range(1):
-        SPS_lin.append_element(GF_IP, f'GammaFactory_IP{i}')
+SPS_lin.append_element(GF_IP, 'GammaFactory_IP')
+# SPS_lin.append_element(GF_IP2, 'GammaFactory_IP2')
+# SPS_lin.append_element(GF_IP3, 'GammaFactory_IP3')
 
 #%%
 
@@ -182,8 +227,8 @@ skew_quad=xt.Multipole(order=0,
 
 
 
-for i in range(1):
-        SPS_lin.append_element(skew_quad, f'skew_quad{i}')
+# for i in range(1):
+#         SPS_lin.append_element(skew_quad, f'skew_quad{i}')
 
 
 
@@ -226,4 +271,9 @@ np.save('cache/zeta.npy', zeta)
 np.save('cache/delta.npy', delta)
 np.save('cache/state.npy', state)   
  
+sigma_dp_end = delta.std()
 
+# particles_new = particles0.copy()
+
+# with open('cache/particles_new.json', 'w') as fid:
+#     json.dump(particles_new.to_dict(), fid, cls=xo.JEncoder)

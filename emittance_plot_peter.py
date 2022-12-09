@@ -3,29 +3,7 @@ import matplotlib.pyplot  as plt
 from matplotlib.widgets import Slider
 
 
-# with open('stuff2.pkl', 'rb') as f:
-#    x2,px2 = pickle.load(f)
-   
-# x=np.load('cache/x.npy')
-# px=np.load('cache/px.npy')
-# max_x_list=np.load('cache/max_x_list.npy')
-# min_x_list=np.load('cache/min_x_list.npy')
-# lower_bound_list=np.load('cache/lower_bound_list.npy')
 
-# x=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/x.npy')
-# px=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/px.npy')
-# max_x_list=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/max_x_list.npy')
-# min_x_list=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/min_x_list.npy')
-# lower_bound_list=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/lower_bound_list.npy')
-
-
-
-# x=np.load('cache/coupling/x.npy')
-# px=np.load('cache/coupling/px.npy')
-# y=np.load('cache/coupling/y.npy')
-# py=np.load('cache/coupling/py.npy')
-# zeta=np.load('cache/coupling/zeta.npy')
-# delta=np.load('cache/coupling/delta.npy')
 
 x=np.load('cache/x.npy')
 px=np.load('cache/px.npy')
@@ -36,13 +14,6 @@ delta=np.load('cache/delta.npy')
 state=np.load('cache/state.npy')
 
 
-x=np.load('cache2/x.npy')
-px=np.load('cache2/px.npy')
-y=np.load('cache2/y.npy')
-py=np.load('cache2/py.npy')
-zeta=np.load('cache2/zeta.npy')
-delta=np.load('cache2/delta.npy')
-state=np.load('cache2/state.npy')
 
 
 x0=x[0,:]
@@ -154,4 +125,5 @@ def emittance_6d():
     plt.ylabel('emittance $(m^3)$')
     plt.xlabel('number of turns')  
 
-emittance_2d(y,py)
+emittance_2d(zeta,delta)
+emittance_2d(x,px)

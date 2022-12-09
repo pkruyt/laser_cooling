@@ -3,29 +3,6 @@ import matplotlib.pyplot  as plt
 from matplotlib.widgets import Slider
 
 
-# with open('stuff2.pkl', 'rb') as f:
-#    x2,px2 = pickle.load(f)
-   
-# x=np.load('cache/x.npy')
-# px=np.load('cache/px.npy')
-# max_x_list=np.load('cache/max_x_list.npy')
-# min_x_list=np.load('cache/min_x_list.npy')
-# lower_bound_list=np.load('cache/lower_bound_list.npy')
-
-# x=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/x.npy')
-# px=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/px.npy')
-# max_x_list=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/max_x_list.npy')
-# min_x_list=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/min_x_list.npy')
-# lower_bound_list=np.load('cache/good_results/cooling_moving_laser_non_linear(100x)/lower_bound_list.npy')
-
-
-
-# x=np.load('cache/coupling/x.npy')
-# px=np.load('cache/coupling/px.npy')
-# y=np.load('cache/coupling/y.npy')
-# py=np.load('cache/coupling/py.npy')
-# zeta=np.load('cache/coupling/zeta.npy')
-# delta=np.load('cache/coupling/delta.npy')
 
 x=np.load('cache/x.npy')
 px=np.load('cache/px.npy')
@@ -62,8 +39,8 @@ number_of_turns=len(x[0,:])
 
 
 
-x=zeta
-px=delta
+x=x
+px=px
 
 # Create the figure and the line that we will manipulate
 fig, ax = plt.subplots()

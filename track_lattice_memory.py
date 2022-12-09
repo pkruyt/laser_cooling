@@ -78,20 +78,28 @@ SPS_lin = xt.Line()
 
 SPS_lin.append_element(arc,'SPS_LinearTransferMatrix')
 
+# Load particles from json file to selected context
+with open('cache/particles_old.json', 'r') as fid:
+    particles0= xp.Particles.from_dict(json.load(fid), _context=context)
+
+particles_old=particles0.copy()
+
+
+
+# with open('cache/particles_new.json', 'r') as fid:
+#     particles0= xp.Particles.from_dict(json.load(fid), _context=context)
+
+std_delta = particles_old.delta.std()
+
+num_particles=len(particles0.x)    
+
 #%% 
 ##################
 # Laser Cooler #
 ##################
 
-#sigma_dp = 2e-4 # relative ion momentum spread
-
-#bunch_intensity = 1e11
-sigma_z = 22.5e-2
-nemitt_x = 2e-6
-nemitt_y = 2.5e-6
-
-#sigma_dp = sigma_z / beta
 sigma_dp = 2e-4 # relative ion momentum spread
+sigma_dp = 2e-4 
 
 #laser-ion beam collision angle
 theta_l = 2.6*np.pi/180 # rad
@@ -106,7 +114,7 @@ lambda_0 = 2*np.pi*hc/hw0 # m -- ion excitation wavelength
 lambda_l = lambda_0*gamma*(1 + beta*np.cos(theta_l)) # m -- laser wavelength
 
 # Shift laser wavelength for fast longitudinal cooling:
-lambda_l = lambda_l*(1+sigma_dp) # m
+lambda_l = lambda_l*(1+1*sigma_dp) # m
 
 laser_frequency = c/lambda_l # Hz
 sigma_w = 2*np.pi*laser_frequency*sigma_dp
@@ -120,7 +128,7 @@ print('Laser wavelength = %.2f nm' % (lambda_l/1e-9))
 laser_waist_radius = 1.3e-3
 #laser_waist_radius = 1.3e-7
 
-laser_x=0.0030000
+laser_x=0.0020000
 
 GF_IP = xt.IonLaserIP(_buffer=buf,
                       laser_x=laser_x,
@@ -138,43 +146,9 @@ GF_IP = xt.IonLaserIP(_buffer=buf,
    )
 
 
-GF_IP = xt.IonLaserIP(_buffer=buf,
-                      laser_x=0.0022500,
-                      
-                      laser_direction_nx = 0,
-                      laser_direction_ny = 0,
-                      laser_direction_nz = -1,
-                      laser_energy         = 5e-3, # J
-                      laser_duration_sigma = sigma_t, # sec
-                      laser_wavelength = lambda_l, # m
-                      laser_waist_radius = laser_waist_radius, # m
-                      ion_excitation_energy = hw0, # eV
-                      ion_excited_lifetime  = 76.6e-12, # sec
-                          
-   )
 
-
-
-
-
-
-# Load particles from json file to selected context
-with open('cache/particles_old.json', 'r') as fid:
-    particles0= xp.Particles.from_dict(json.load(fid), _context=context)
-
-with open('cache/particles_new.json', 'r') as fid:
-    particles0= xp.Particles.from_dict(json.load(fid), _context=context)
-
-
-num_particles=len(particles0.x)    
-
-
-# particles0.y=0
-# particles0.py=0
-
-
-#SPS=xt.Line(sequence)
-
+                    
+ 
 
 
 for i in range(1):
@@ -214,7 +188,7 @@ for i in range(1):
 #%%
 
 
-num_turns=int(1e1) #4e4 is maximum
+num_turns=int(1e2) #4e4 is maximum
 
 tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
 
@@ -226,7 +200,7 @@ monitor = xt.ParticlesMonitor(_context=context,
                               #repetition_period=20, # <--
                               num_particles=num_particles)
 
-num_cycles=int(1e3)
+num_cycles=int(1e4)
 
 
 for i in tqdm(range(num_cycles)):
@@ -294,6 +268,6 @@ for i in tqdm(range(num_cycles)):
 
 particles_new = particles0.copy()
 
-with open('cache/particles_new.json', 'w') as fid:
-    json.dump(particles_new.to_dict(), fid, cls=xo.JEncoder)
+# with open('cache/particles_new.json', 'w') as fid:
+#     json.dump(particles_new.to_dict(), fid, cls=xo.JEncoder)
 
