@@ -44,9 +44,9 @@ import matplotlib.gridspec as gridspec
 
  
 for turn in tqdm(range(num_turns)):
-    if turn % 1 ==0:
-        x1 = zeta[:,turn]
-        y1 = delta[:,turn]
+    if turn % 100 ==0:
+        x1 = x[:,turn]
+        y1 = px[:,turn]
     
         # x1=np.expand_dims(x1,axis=1)
         # y1=np.expand_dims(y1,axis=1)

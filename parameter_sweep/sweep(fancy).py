@@ -201,7 +201,10 @@ for i in tqdm(np.arange(start=0,stop=3,step=1)):
     
     
     #SPS_lin.append_element(skew_quad, 'skew_quad')
-          
+    
+    
+    
+    
     #%%
     
     
@@ -224,7 +227,7 @@ for i in tqdm(np.arange(start=0,stop=3,step=1)):
     if not(os.path.exists(path) and os.path.isdir(path)):
         os.mkdir(f'/home/pkruyt/Documents/sweep_{variable_name}')
     
-    
+       
     vars_to_memmap = ['x', 'px', 'y', 'py', 'zeta', 'delta', 'state']
     fp_vars = {}
     
@@ -232,50 +235,42 @@ for i in tqdm(np.arange(start=0,stop=3,step=1)):
     for var in vars_to_memmap:
         fp_var = np.memmap(os.path.join(path, f'{var}.npy'), dtype=np.float64, mode='w+', shape=(num_particles, num_turns))
         fp_vars[var] = fp_var
-   
-        
-    particles0=particles_old.copy()
     
     # Populate the arrays with data from particles0
     for iturn in range(num_turns):
         tracker.track(particles0)
         for var in vars_to_memmap:
             fp_vars[var][:, iturn] = getattr(particles0, var)
-            
-            
+    
+    # Create arrays for particles_old data
     particles_old_vars = {}
     for var in vars_to_memmap:
         particles_old_var = np.expand_dims(getattr(particles_old, var), axis=1)
         particles_old_vars[var] = particles_old_var
         
-      
+    
     path=f'/home/pkruyt/Documents/sweep_{variable_name}/{variable_name}:{i}'
     if not(os.path.exists(path) and os.path.isdir(path)):
         os.mkdir(f'/home/pkruyt/Documents/sweep_{variable_name}/{variable_name}:{i}')
-        
-        
-    variables={}    
     # Concatenate data from particles_old and fp_vars
     for var in vars_to_memmap:
         var_old = particles_old_vars[var]
         var_new = fp_vars[var]
         var_concat = np.append(var_old, var_new, axis=1)
-        np.save(f'/home/pkruyt/Documents/sweep_{variable_name}/{variable_name}:{i}/{var}:{i}.npy', var_concat)
-        variables[var]=var_concat
         # Assign the concatenated array to the appropriate variable
         exec(f'{var} = var_concat')
-        
-        
-    import emittance    
-        
-    x=variables['x']
-    px=variables['px']
-    y=variables['y']
-    py=variables['py']
-    zeta=variables['zeta']
-    delta=variables['delta']
-    state=variables['state']
-           
+        np.save(f'/home/pkruyt/Documents/sweep_{variable_name}/{variable_name}:{i}/{var}:{i}.npy', var_concat)
+   
+      
+    import emittance
+    
+    
+    zeta=fp_vars['zeta']
+    delta=fp_vars['delta']
+    x=fp_vars['x']
+    y=fp_vars['y']
+    px=fp_vars['px']
+    py=fp_vars['py']
     
     emitt_z = emittance.emittance_2d(zeta, delta)
     emitt_x = emittance.emittance_2d(x, px)
@@ -296,11 +291,13 @@ for i in tqdm(np.arange(start=0,stop=3,step=1)):
         
     np.save(f'/home/pkruyt/Documents/sweep_{variable_name}/emittance_results/emitt_z/emitt_z:{i}.npy', emitt_z)   
     np.save(f'/home/pkruyt/Documents/sweep_{variable_name}/emittance_results/emitt_x/emitt_x:{i}.npy', emitt_x)   
-    
-    
+
     for var in vars_to_memmap:
-        del fp_vars[var] 
+       del fp_vars[var]
     
+    
+    # particles_new = particles0.copy()
 
-
+# with open('cache/particles_new.json', 'w') as fid:
+#     json.dump(particles_new.to_dict(), fid, cls=xo.JEncoder)
 

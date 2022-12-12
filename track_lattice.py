@@ -236,7 +236,7 @@ skew_quad=xt.Multipole(order=0,
 #%%
 
 
-num_turns=int(1e3)
+num_turns=int(1e4)
 
 tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
 
