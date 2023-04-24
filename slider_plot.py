@@ -39,8 +39,8 @@ number_of_turns=len(x[0,:])
 
 
 
-x=x
-px=px
+x=zeta
+px=delta
 
 # Create the figure and the line that we will manipulate
 fig, ax = plt.subplots()

@@ -148,15 +148,16 @@ laser_waist_radius = 1.3e-3
 #laser_waist_radius = 1.3e-7
 
 laser_x=0.0020000
+laser_x=0.000000
 
-GF_IP = xt.IonLaserIP(_buffer=buf,
+GF_IP = xt.CWlaser(_buffer=buf,
                       laser_x=laser_x,
                       
                       laser_direction_nx = 0,
                       laser_direction_ny = 0,
                       laser_direction_nz = -1,
                       laser_energy         = 5e-3, # J
-                      laser_duration_sigma = sigma_t, # sec
+                      laser_duration_sigma = 1, # sec
                       laser_wavelength = lambda_l, # m
                       laser_waist_radius = laser_waist_radius, # m
                       ion_excitation_energy = hw0, # eV

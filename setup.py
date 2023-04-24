@@ -6,6 +6,7 @@ import xobjects as xo
 import xtrack as xt
 import xpart as xp
 
+from scipy import constants 
 
 ####################
 # Choose a context #
@@ -20,13 +21,14 @@ buf = context.new_buffer()
 
 
 # Ion properties:
-m_u = 931.49410242e6 # eV/c^2 -- atomic mass unit
 A = 207.98 # Lead-208
 Z = 82  # Number of protons in the ion (Lead)
 Ne = 3 # Number of remaining electrons (Lithium-like)
-m_e = 0.511e6 # eV/c^2 -- electron mass
-m_p = 938.272088e6 # eV/c^2 -- proton mass
-c = 299792458.0 # m/s
+
+c = constants.c # m/s
+m_u=constants.physical_constants['atomic mass unit-electron volt relationship'][0] # eV/c^2 -- atomic mass unit
+m_e=constants.m_e/constants.e*c*c # eV/c^2 -- electron mass
+m_p=constants.m_p/constants.e*c*c # eV/c^2 -- proton mass
 
 m_ion = A*m_u + Ne*m_e # eV/c^2
 
@@ -92,6 +94,7 @@ particles_old=particles0.copy()
 sequence.particle_ref = particle_sample
 twiss = SPS_tracker.twiss(symplectify=True)
 
+twiss_dict=dict(twiss)
 
 del twiss['particle_on_co']
 del twiss['_ebe_fields']

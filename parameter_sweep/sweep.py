@@ -116,7 +116,7 @@ lambda_0 = 2*np.pi*hc/hw0 # m -- ion excitation wavelength
 lambda_l = lambda_0*gamma*(1 + beta*np.cos(theta_l)) # m -- laser wavelength
 
 # Shift laser wavelength for fast longitudinal cooling:
-#lambda_l = lambda_l*(1+1*sigma_dp) # m
+lambda_l = lambda_l*(1+1*sigma_dp) # m
 
 laser_frequency = c/lambda_l # Hz
 sigma_w = 2*np.pi*laser_frequency*sigma_dp
@@ -132,21 +132,30 @@ laser_waist_radius = 1.3e-3
 
 laser_x=0.0020000
 #laser_x=0.0010000
+laser_energy=5e-3, # J
 
 
 
 # variable_name='laser_x'
-variable_name='laser_wavelength'
+# variable_name='laser_wavelength'
 # variable_name='sigma_t'
 # variable_name='laser_waist_radius'
+#variable_name='laser_energy'
+variable_name='theta'
 
-# for i in tqdm(laser_x_sweep):
-#for i in tqdm(range(5)): 
-for i in tqdm(np.arange(start=0,stop=3,step=1)): 
+for i in tqdm(np.arange(start=0,stop=4,step=1)):  
+#for i in tqdm(np.arange(start=0.8,stop=1.2,step=0.1)): 
     lambda_l_sweep=[lambda_l*(1+i*sigma_dp)]
     laser_x_sweep=[laser_x*(i)]
     sigma_t_sweep=[sigma_t*(i)]
     laser_waist_radius_sweep=[laser_waist_radius*(i)]
+    laser_energy_sweep=[laser_energy*(i)]
+        
+    theta_l = 10
+    theta_sweep=[theta_l*(i)]
+    nx = 0; ny = -np.sin(theta_sweep); nz = -np.cos(theta_sweep)
+    
+    
     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',i)
     
     
@@ -156,20 +165,17 @@ for i in tqdm(np.arange(start=0,stop=3,step=1)):
     GF_IP = xt.IonLaserIP(_buffer=buf,
                           laser_x=laser_x,
                           
-                          laser_direction_nx = 0,
-                          laser_direction_ny = 0,
-                          laser_direction_nz = -1,
-                          laser_energy         = 5e-3, # J
+                          laser_direction_nx = nx,
+                          laser_direction_ny = ny,
+                          laser_direction_nz = nz,
+                          laser_energy         = laser_energy, # J
                           laser_duration_sigma = sigma_t, # sec
-                          laser_wavelength = lambda_l_sweep, # m
+                          laser_wavelength = lambda_l, # m
                           laser_waist_radius = laser_waist_radius, # m
                           ion_excitation_energy = hw0, # eV
                           ion_excited_lifetime  = 76.6e-12, # sec
                               
        )
-    
-    
-    
     
     
     SPS_lin.append_element(GF_IP, 'GammaFactory_IP')
@@ -198,13 +204,10 @@ for i in tqdm(np.arange(start=0,stop=3,step=1)):
                            length=Lsq)
     
     
-    
-    
     #SPS_lin.append_element(skew_quad, 'skew_quad')
           
     #%%
-    
-    
+        
     num_turns=int(1e4) #4e4 is maximum
     
     tracker = xt.Tracker(_context=context, _buffer=buf, line=SPS_lin)
@@ -216,51 +219,66 @@ for i in tqdm(np.arange(start=0,stop=3,step=1)):
                                   #n_repetitions=3,      # <--
                                   #repetition_period=20, # <--
                                   num_particles=num_particles)
+   
+        
+    # Set the path for the directory that will be created
+    home = '/home/pkruyt/Documents/'
+    path = os.path.join(home, f'sweep_{variable_name}')
     
-    
-    path = os.path.join('/home/pkruyt/Documents', f'sweep_{variable_name}')
-
-    #path=f'/home/pkruyt/Documents/sweep_{variable_name}'
+    # Create the directory if it does not already exist
     if not(os.path.exists(path) and os.path.isdir(path)):
-        os.mkdir(f'/home/pkruyt/Documents/sweep_{variable_name}')
+        os.mkdir(path)
     
-    
+    # Define a list of variables that will be memory-mapped
     vars_to_memmap = ['x', 'px', 'y', 'py', 'zeta', 'delta', 'state']
+    
+    # Initialize an empty dictionary to hold the memory-mapped arrays
     fp_vars = {}
     
-    # Create memory-mapped arrays for each variable
+    # Create memory-mapped arrays for each variable in vars_to_memmap
     for var in vars_to_memmap:
         fp_var = np.memmap(os.path.join(path, f'{var}.npy'), dtype=np.float64, mode='w+', shape=(num_particles, num_turns))
         fp_vars[var] = fp_var
-   
-        
-    particles0=particles_old.copy()
     
-    # Populate the arrays with data from particles0
+    # Create a copy of the particles_old array before starting the tracking
+    particles0 = particles_old.copy()
+    
+    # Loop over the number of turns
     for iturn in range(num_turns):
+        # Run the tracker on the particles0 array
         tracker.track(particles0)
+        
+        # Loop over the variables in vars_to_memmap and populate the corresponding
+        # memory-mapped arrays with the attribute data from the particles0 array
         for var in vars_to_memmap:
             fp_vars[var][:, iturn] = getattr(particles0, var)
             
-            
-    particles_old_vars = {}
-    for var in vars_to_memmap:
-        particles_old_var = np.expand_dims(getattr(particles_old, var), axis=1)
-        particles_old_vars[var] = particles_old_var
+    
+    
+    particles_old_vars = {}  # Dictionary to store the values of variables in the particles_old object
+
+    for var in vars_to_memmap:      
+        # Retrieve the value of the current variable from the particles_old object
+        particles_old_var = getattr(particles_old, var)
+        # Expand the dimensions of the variable value to include an additional dimension along the axis=1 axis
+        particles_old_var_expanded = np.expand_dims(particles_old_var, axis=1)
+        # Add the expanded variable value to the particles_old_vars dictionary using the variable name as the key
+        particles_old_vars[var] = particles_old_var_expanded
+    
         
-      
-    path=f'/home/pkruyt/Documents/sweep_{variable_name}/{variable_name}:{i}'
+    # Create the directory if it does not already exist 
+    path=home+f'sweep_{variable_name}/{variable_name}:{i}'
     if not(os.path.exists(path) and os.path.isdir(path)):
-        os.mkdir(f'/home/pkruyt/Documents/sweep_{variable_name}/{variable_name}:{i}')
+        os.mkdir(path)
         
         
-    variables={}    
+    variables={} # Dictionary to store the variables x,px,y,py,zeta,delta,and state
     # Concatenate data from particles_old and fp_vars
     for var in vars_to_memmap:
         var_old = particles_old_vars[var]
         var_new = fp_vars[var]
         var_concat = np.append(var_old, var_new, axis=1)
-        np.save(f'/home/pkruyt/Documents/sweep_{variable_name}/{variable_name}:{i}/{var}:{i}.npy', var_concat)
+        np.save(home+f'sweep_{variable_name}/{variable_name}:{i}/{var}:{i}.npy', var_concat)
         variables[var]=var_concat
         # Assign the concatenated array to the appropriate variable
         exec(f'{var} = var_concat')
@@ -281,26 +299,23 @@ for i in tqdm(np.arange(start=0,stop=3,step=1)):
     emitt_x = emittance.emittance_2d(x, px)
     emitt_y = emittance.emittance_2d(y, py)
     
-    path=f'/home/pkruyt/Documents/sweep_{variable_name}/emittance_results/'
+    path=home+f'sweep_{variable_name}/emittance_results/'
     if not(os.path.exists(path) and os.path.isdir(path)):
         os.mkdir(path)
 
-    path=f'/home/pkruyt/Documents/sweep_{variable_name}/emittance_results/emitt_z/'
+    path=home+f'sweep_{variable_name}/emittance_results/emitt_z/'
     if not(os.path.exists(path) and os.path.isdir(path)):
         os.mkdir(path)
-    path=f'/home/pkruyt/Documents/sweep_{variable_name}/emittance_results/emitt_x/'
+    path=home+f'sweep_{variable_name}/emittance_results/emitt_x/'
     if not(os.path.exists(path) and os.path.isdir(path)):
         os.mkdir(path)    
         
         
         
-    np.save(f'/home/pkruyt/Documents/sweep_{variable_name}/emittance_results/emitt_z/emitt_z:{i}.npy', emitt_z)   
-    np.save(f'/home/pkruyt/Documents/sweep_{variable_name}/emittance_results/emitt_x/emitt_x:{i}.npy', emitt_x)   
+    np.save(home+f'sweep_{variable_name}/emittance_results/emitt_z/emitt_z:{i}.npy', emitt_z)   
+    np.save(home+f'sweep_{variable_name}/emittance_results/emitt_x/emitt_x:{i}.npy', emitt_x)   
     
     
     for var in vars_to_memmap:
         del fp_vars[var] 
-    
-
-
 

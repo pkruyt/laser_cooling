@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 
 
 # variable_name='laser_x'
-variable_name='laser_wavelength'
+#variable_name='laser_wavelength'
 # variable_name='sigma_t'
 # variable_name='laser_waist_radius'
+variable_name='laser_energy'
+variable_name='theta'
 
 path=f'/home/pkruyt/Documents/sweep_{variable_name}/emittance_results/'
 
@@ -30,11 +32,7 @@ for key in numpy_vars:
         plt.plot(numpy_vars[key],label=label)
         final_z.append(numpy_vars[key][-1])
 
-
-
-
-
-        
+   
         
 plt.legend()        
 plt.xlabel('Number of turns')
