@@ -2,6 +2,7 @@ cache/
 images/
 cache_memory/
 cache2/
+results/
 
 *.pyc
 
