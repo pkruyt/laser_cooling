@@ -6,6 +6,8 @@ cache2/
 
 *.npz
 *.pyc
+*.eps
+*.0
 
 #files being edited
 *~
