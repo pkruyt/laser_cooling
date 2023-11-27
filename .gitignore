@@ -1,13 +1,13 @@
-cache/
-images/
-cache_memory/
-cache2/
-
+/.vscode/
+/.ipynb_checkpoints/
 
 *.npz
 *.pyc
 *.eps
+*.png
 *.0
+
+
 
 #files being edited
 *~
