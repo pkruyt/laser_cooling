@@ -43,7 +43,7 @@ lead = Ion(name="Pb$^{79+}$", A=208, Z=82, q0=79, excited_lifetime=76.6e-12, hw0
 
 
 calcium = Ion(name="Ca$^{17+}$", A=40, Z=20, q0=17, excited_lifetime=0.4279*1e-12, hw0=661.89,
-              lambda_l=768*1e-9,laser_x=-1.577181208053691*1e-3, bunch_length=0.010, bunch_intensity = 4*1e9,
+              lambda_l=768*1e-9,laser_x=-1.577181208053691*1e-3, bunch_length=9.5*1e-2, bunch_intensity = 4*1e9,
               gamma_rel=205.08913416882473,gamma_cooling=205.0686404689884,gamma_heating=205.150639852357,
               )
 
