@@ -1,0 +1,5 @@
+Done loading line from dict.           
+Laser pulse duration sigma_t = 3.92 ps
+Laser wavelength = 768.00 nm
+The line has collective elements.
+In the twiss computation collective elements are replaced by drifts
